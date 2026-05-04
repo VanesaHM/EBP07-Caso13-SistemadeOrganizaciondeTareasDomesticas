@@ -25,8 +25,11 @@ services:
       db:
         condition: service_healthy
     environment:
+      SPRING_PROFILES_ACTIVE: docker
       PORT: ${PORT}
-      DATABASE_URL: jdbc:postgresql://db:5432/${DATABASE_NAME}
+      DATABASE_HOST: db
+      DATABASE_PORT: 5432
+      DATABASE_NAME: ${DATABASE_NAME}
       DATABASE_USERNAME: ${DATABASE_USER}
       DATABASE_PASSWORD: ${DATABASE_PASSWORD}
       JWT_SECRET: ${JWT_SECRET}

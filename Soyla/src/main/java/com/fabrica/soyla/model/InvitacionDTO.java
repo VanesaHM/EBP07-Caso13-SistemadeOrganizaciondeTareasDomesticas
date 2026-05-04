@@ -11,10 +11,10 @@ public class InvitacionDTO {
     private String grupoNombre;
     private String mensaje;
 
-    public InvitacionDTO(String token, String grupoNombre) {
+    public InvitacionDTO(String token, String grupoNombre, String enlaceInvitacion) {
         this.token = token;
         this.grupoNombre = grupoNombre;
-        this.enlaceInvitacion = "/api/invitaciones/" + token + "/aceptar";
+        this.enlaceInvitacion = enlaceInvitacion;
         this.mensaje = "Enlace de invitación generado exitosamente";
     }
 }

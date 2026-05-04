@@ -6,6 +6,835 @@
       <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       <title>TareasDomésticas</title>
       <style>html, body { height: 100%; margin: 0; } #root { height: 100%; }</style>
+      <script>
+        (() => {
+          const LEGACY_API_ORIGIN = "http://localhost:8080";
+          const RENDER_API_BASE = "https://soyla-api.onrender.com/api";
+          const USER_CACHE_KEY = "soylaUserCache";
+          const GROUP_CACHE_KEY = "soylaGroupCache";
+          const MEMBER_CACHE_KEY = "soylaMemberCache";
+          const TASK_CACHE_KEY = "soylaTaskCache";
+          const ROLE_OVERRIDE_KEY = "soylaRoleOverrides";
+          const runtimeApiBase = RENDER_API_BASE;
+          const originalFetch = window.fetch.bind(window);
+
+          const readJson = (value, fallback) => {
+            try {
+              return JSON.parse(value);
+            } catch {
+              return fallback;
+            }
+          };
+
+          const getCurrentSession = () => {
+            const raw = localStorage.getItem("currentSession");
+            return raw ? readJson(raw, null) : null;
+          };
+
+          const setCurrentSessionUser = (patch) => {
+            const session = getCurrentSession();
+            if (!session || !session.user) return;
+
+            localStorage.setItem(
+              "currentSession",
+              JSON.stringify({
+                ...session,
+                user: { ...session.user, ...patch },
+              })
+            );
+          };
+
+          const getStoredMap = (key) =>
+            readJson(localStorage.getItem(key) || "{}", {});
+
+          const setStoredMap = (key, value) => {
+            localStorage.setItem(key, JSON.stringify(value));
+          };
+
+          const getUserCache = () => getStoredMap(USER_CACHE_KEY);
+          const setUserCache = (cache) => setStoredMap(USER_CACHE_KEY, cache);
+
+          const cacheUser = (user) => {
+            if (!user || !user.email) return;
+
+            const cache = getUserCache();
+            cache[user.email] = { ...(cache[user.email] || {}), ...user };
+            setUserCache(cache);
+          };
+
+          const getGroupCache = () =>
+            readJson(sessionStorage.getItem(GROUP_CACHE_KEY) || "[]", []);
+
+          const setGroupCache = (groups) => {
+            sessionStorage.setItem(GROUP_CACHE_KEY, JSON.stringify(groups));
+          };
+
+          const getMemberCache = () =>
+            readJson(sessionStorage.getItem(MEMBER_CACHE_KEY) || "{}", {});
+
+          const setMemberCache = (cache) => {
+            sessionStorage.setItem(MEMBER_CACHE_KEY, JSON.stringify(cache));
+          };
+
+          const cacheMembers = (groupId, members) => {
+            const cache = getMemberCache();
+            cache[String(groupId)] = members;
+            setMemberCache(cache);
+          };
+
+          const getCachedMembers = (groupId) =>
+            getMemberCache()[String(groupId)] || [];
+
+          const getTaskCache = () =>
+            readJson(sessionStorage.getItem(TASK_CACHE_KEY) || "{}", {});
+
+          const setTaskCache = (cache) => {
+            sessionStorage.setItem(TASK_CACHE_KEY, JSON.stringify(cache));
+          };
+
+          const cacheTask = (task) => {
+            if (!task || !task.id) return;
+
+            const cache = getTaskCache();
+            cache[String(task.id)] = task;
+            setTaskCache(cache);
+          };
+
+          const removeTask = (taskId) => {
+            const cache = getTaskCache();
+            delete cache[String(taskId)];
+            setTaskCache(cache);
+          };
+
+          const getRoleOverrides = () =>
+            readJson(sessionStorage.getItem(ROLE_OVERRIDE_KEY) || "{}", {});
+
+          const setRoleOverrides = (value) => {
+            sessionStorage.setItem(ROLE_OVERRIDE_KEY, JSON.stringify(value));
+          };
+
+          const setRoleOverride = (groupId, memberKey, role) => {
+            const overrides = getRoleOverrides();
+            const groupKey = String(groupId);
+            overrides[groupKey] = overrides[groupKey] || {};
+            overrides[groupKey][memberKey] = role;
+            setRoleOverrides(overrides);
+          };
+
+          const getRoleOverride = (groupId, memberKey) =>
+            getRoleOverrides()[String(groupId)]?.[memberKey];
+
+          const normalizeRole = (role) => {
+            switch ((role || "").toUpperCase()) {
+              case "ADMIN":
+              case "ADMINISTRADOR":
+                return "Administrador";
+              case "COADMIN":
+              case "COADMINISTRADOR":
+                return "Coadministrador";
+              default:
+                return "Colaborador";
+            }
+          };
+
+          const today = () => new Date().toISOString().slice(0, 10);
+          const inviteExpiry = () =>
+            new Date(Date.now() + 72 * 60 * 60 * 1000).toISOString();
+
+          const toJsonResponse = (payload, status = 200) =>
+            new Response(JSON.stringify(payload), {
+              status,
+              headers: { "Content-Type": "application/json" },
+            });
+
+          const responseMessage = async (response, fallback) => {
+            const text = await response.text();
+            const parsed = text ? readJson(text, null) : null;
+
+            return (
+              parsed?.message ||
+              parsed?.mensaje ||
+              (typeof parsed === "string" ? parsed : "") ||
+              text ||
+              fallback
+            );
+          };
+
+          const errorResponse = async (response, fallback) =>
+            toJsonResponse(
+              { message: await responseMessage(response, fallback) },
+              response.status || 400
+            );
+
+          const getBodyObject = async (init) => {
+            if (!init || init.body == null) return {};
+            if (typeof init.body === "string") {
+              return readJson(init.body, {});
+            }
+
+            return init.body;
+          };
+
+          const backendFetch = async (path, init = {}, tokenOverride = null) => {
+            const headers = new Headers(init.headers || {});
+            const token = tokenOverride || getCurrentSession()?.user?.token;
+            if (token && !headers.has("Authorization")) {
+              headers.set("Authorization", `Bearer ${token}`);
+            }
+
+            const request = { ...init, headers };
+            if (
+              request.body != null &&
+              typeof request.body !== "string" &&
+              !(request.body instanceof FormData)
+            ) {
+              headers.set("Content-Type", "application/json");
+              request.body = JSON.stringify(request.body);
+            }
+
+            return originalFetch(`${runtimeApiBase.replace(/\/+$/, "")}${path}`, request);
+          };
+
+          const normalizeMember = (member, fallback = {}) => ({
+            id: member?.id ?? fallback.id ?? null,
+            name: member?.nombre || member?.name || fallback.name || "",
+            email: member?.correo || member?.email || fallback.email || "",
+            role:
+              normalizeRole(member?.rol || member?.role || fallback.role) ||
+              "Colaborador",
+          });
+
+          const normalizeGroup = (group) => {
+            const rawMembers = Array.isArray(group?.miembros)
+              ? group.miembros
+              : Array.isArray(group?.members)
+                ? group.members
+                : [];
+
+            const members = rawMembers.map((member) => {
+              const user = member?.usuario || member?.user || {};
+              return normalizeMember(
+                {
+                  id: user.id ?? member.id ?? null,
+                  nombre: user.nombre || member.nombre,
+                  correo: user.correo || member.correo,
+                  rol: member.rol || member.role,
+                },
+                {}
+              );
+            });
+
+            return {
+              id: group?.id ?? null,
+              name: group?.nombre || group?.name || "",
+              memberCount: group?.memberCount ?? members.length,
+              members,
+            };
+          };
+
+          const normalizeTask = (task, groupId = null) => {
+            const responsible = task?.responsable || task?.assignee || {};
+
+            return {
+              id: task?.id ?? null,
+              groupId: groupId ?? task?.grupo?.id ?? task?.groupId ?? null,
+              name: task?.nombre || task?.name || "",
+              description: task?.descripcion || task?.description || "",
+              deadline: task?.fechaVencimiento || task?.deadline || "",
+              frequency: task?.frecuencia || task?.frequency || "ninguna",
+              status: task?.estado || task?.status || "SIN_EMPEZAR",
+              priority: task?.prioridad || task?.priority || "",
+              assignedToName:
+                task?.nombreResponsable ||
+                responsible?.nombre ||
+                task?.assignedToName ||
+                "",
+              assignedToEmail:
+                responsible?.correo || task?.assignedToEmail || "",
+              assignedToId:
+                responsible?.id ?? task?.assignedToId ?? null,
+            };
+          };
+
+          const findGroupById = (groups, groupId) =>
+            groups.find((group) => String(group.id) === String(groupId));
+
+          const findCurrentUserInGroups = (groups, email) => {
+            for (const group of groups) {
+              const match = group.members.find((member) => member.email === email);
+              if (match) return match;
+            }
+
+            return null;
+          };
+
+          const refreshGroups = async (tokenOverride = null) => {
+            const response = await backendFetch(
+              "/grupos/mis-grupos",
+              { method: "GET" },
+              tokenOverride
+            );
+
+            if (!response.ok) return [];
+
+            const payload = await response.json().catch(() => null);
+            const groups = Array.isArray(payload)
+              ? payload.map(normalizeGroup)
+              : [];
+
+            setGroupCache(groups);
+
+            const sessionEmail = getCurrentSession()?.user?.email;
+            if (sessionEmail) {
+              const currentUser = findCurrentUserInGroups(groups, sessionEmail);
+              if (currentUser) {
+                const enrichedUser = {
+                  id: currentUser.id,
+                  fullName: currentUser.name || sessionEmail,
+                  email: sessionEmail,
+                };
+
+                cacheUser(enrichedUser);
+                setCurrentSessionUser(enrichedUser);
+              }
+            }
+
+            for (const group of groups) {
+              cacheMembers(group.id, group.members);
+            }
+
+            return groups;
+          };
+
+          const ensureCurrentUser = async (email, tokenOverride = null) => {
+            const current = getUserCache()[email];
+            if (current?.id && current?.fullName) {
+              return current;
+            }
+
+            await refreshGroups(tokenOverride);
+            return getUserCache()[email] || current || null;
+          };
+
+          const enrichMembers = async (groupId) => {
+            const groups = getGroupCache().length
+              ? getGroupCache()
+              : await refreshGroups();
+            const group = findGroupById(groups, groupId);
+            if (group) {
+              cacheMembers(groupId, group.members);
+              return group.members;
+            }
+
+            return getCachedMembers(groupId);
+          };
+
+          const isLegacyApiRequest = (url) =>
+            url.pathname.startsWith("/api/") &&
+            (url.origin === LEGACY_API_ORIGIN || url.origin === window.location.origin);
+
+          const mapLegacyPath = (url) => `${url.pathname.slice(4)}${url.search}`;
+
+          window.fetch = async (input, init = {}) => {
+            const target =
+              typeof input === "string"
+                ? new URL(input, window.location.href)
+                : new URL(input.url, window.location.href);
+
+            if (!isLegacyApiRequest(target)) {
+              return originalFetch(input, init);
+            }
+
+            const legacyPath = mapLegacyPath(target);
+            const method = (
+              init.method ||
+              (typeof input !== "string" ? input.method : "GET") ||
+              "GET"
+            ).toUpperCase();
+
+            try {
+              if (legacyPath === "/auth/register" && method === "POST") {
+                const body = await getBodyObject(init);
+                const response = await backendFetch("/usuarios/registrar", {
+                  method: "POST",
+                  body: {
+                    nombre: body.fullName || "",
+                    correo: body.email || "",
+                    contrasena: body.password || "",
+                  },
+                });
+
+                if (!response.ok) {
+                  return errorResponse(response, "No fue posible completar el registro.");
+                }
+
+                const user = await response.json();
+                const normalizedUser = {
+                  id: user.id ?? null,
+                  fullName: user.nombre || body.fullName || body.email || "",
+                  email: user.correo || body.email || "",
+                };
+
+                cacheUser(normalizedUser);
+                return toJsonResponse(normalizedUser, response.status);
+              }
+
+              if (legacyPath === "/auth/login" && method === "POST") {
+                const body = await getBodyObject(init);
+                const response = await backendFetch("/auth/login", {
+                  method: "POST",
+                  body: {
+                    correo: body.email || "",
+                    contrasena: body.password || "",
+                  },
+                });
+
+                if (!response.ok) {
+                  return errorResponse(response, "No fue posible iniciar sesion.");
+                }
+
+                const payload = await response.json();
+                const email = payload.usuario || body.email || "";
+                const cachedUser = getUserCache()[email] || null;
+
+                const groups = await refreshGroups(payload.token);
+                const userFromGroups = findCurrentUserInGroups(groups, email);
+                if (userFromGroups) {
+                  cacheUser({
+                    id: userFromGroups.id,
+                    fullName: userFromGroups.name || email,
+                    email,
+                  });
+                }
+
+                const enrichedUser = getUserCache()[email] || cachedUser || {};
+                const normalizedLogin = {
+                  token: payload.token,
+                  email,
+                  id: enrichedUser.id ?? null,
+                  fullName: enrichedUser.fullName || email,
+                };
+
+                cacheUser(normalizedLogin);
+                return toJsonResponse(normalizedLogin, response.status);
+              }
+
+              if (/^\/users\/[^/]+$/.test(legacyPath) && method === "GET") {
+                const email = decodeURIComponent(legacyPath.split("/").pop());
+                const currentUser = await ensureCurrentUser(email);
+
+                if (!currentUser?.id) {
+                  return toJsonResponse({
+                    id: currentUser?.id ?? null,
+                    fullName: currentUser?.fullName || email,
+                    email: currentUser?.email || email,
+                    phone: currentUser?.phone || "",
+                  });
+                }
+
+                const response = await backendFetch(`/usuarios/perfil/${currentUser.id}`, {
+                  method: "GET",
+                });
+
+                if (!response.ok) {
+                  return errorResponse(response, "No fue posible cargar el perfil.");
+                }
+
+                const payload = await response.json();
+                const normalizedProfile = {
+                  id: currentUser.id,
+                  fullName: payload.nombre || currentUser.fullName || email,
+                  email: payload.correo || email,
+                  phone: currentUser.phone || "",
+                };
+
+                cacheUser(normalizedProfile);
+                setCurrentSessionUser(normalizedProfile);
+                return toJsonResponse(normalizedProfile, response.status);
+              }
+
+              if (/^\/users\/[^/]+$/.test(legacyPath) && method === "PUT") {
+                const email = decodeURIComponent(legacyPath.split("/").pop());
+                const body = await getBodyObject(init);
+                const currentUser = await ensureCurrentUser(email);
+
+                if (!currentUser?.id) {
+                  return toJsonResponse(
+                    { message: "No fue posible identificar el perfil del usuario actual." },
+                    400
+                  );
+                }
+
+                const response = await backendFetch(`/usuarios/perfil/${currentUser.id}`, {
+                  method: "PUT",
+                  body: {
+                    correo: body.email || email,
+                    telefono: body.phone || "",
+                  },
+                });
+
+                if (!response.ok) {
+                  return errorResponse(response, "No fue posible actualizar el perfil.");
+                }
+
+                const payload = await response.json();
+                const normalizedProfile = {
+                  id: currentUser.id,
+                  fullName: payload.nombre || currentUser.fullName || email,
+                  email: payload.correo || body.email || email,
+                  phone: body.phone || "",
+                };
+
+                cacheUser(normalizedProfile);
+                setCurrentSessionUser(normalizedProfile);
+                return toJsonResponse(normalizedProfile, response.status);
+              }
+
+              if (legacyPath === "/groups" && method === "POST") {
+                const body = await getBodyObject(init);
+                const response = await backendFetch("/grupos/crear", {
+                  method: "POST",
+                  body: {
+                    nombre: body.name || "",
+                  },
+                });
+
+                if (!response.ok) {
+                  return errorResponse(response, "No fue posible crear el grupo familiar.");
+                }
+
+                const payload = await response.json();
+                const group = normalizeGroup(payload);
+                const sessionEmail = getCurrentSession()?.user?.email;
+                const currentMember = group.members.find(
+                  (member) => member.email === sessionEmail
+                );
+
+                if (currentMember) {
+                  const enrichedUser = {
+                    id: currentMember.id,
+                    fullName: currentMember.name || sessionEmail,
+                    email: sessionEmail,
+                  };
+
+                  cacheUser(enrichedUser);
+                  setCurrentSessionUser(enrichedUser);
+                }
+
+                cacheMembers(group.id, group.members);
+                return toJsonResponse(group, response.status);
+              }
+
+              if (legacyPath.startsWith("/groups?") && method === "GET") {
+                return toJsonResponse(await refreshGroups());
+              }
+
+              if (/^\/groups\/[^/]+$/.test(legacyPath) && method === "GET") {
+                const groupId = legacyPath.split("/").pop();
+                const groups = getGroupCache().length
+                  ? getGroupCache()
+                  : await refreshGroups();
+                const group = findGroupById(groups, groupId);
+
+                if (!group) {
+                  return toJsonResponse({ message: "Grupo no encontrado" }, 404);
+                }
+
+                return toJsonResponse(group);
+              }
+
+              if (/^\/groups\/[^/]+\/members$/.test(legacyPath) && method === "GET") {
+                const groupId = legacyPath.split("/")[2];
+                const fallbackMembers = await enrichMembers(groupId);
+                const response = await backendFetch(`/grupos/${groupId}/miembros`, {
+                  method: "GET",
+                });
+
+                if (!response.ok) {
+                  return errorResponse(response, "No fue posible cargar los miembros del grupo.");
+                }
+
+                const payload = await response.json().catch(() => []);
+                const members =
+                  Array.isArray(payload) && payload.length > 0
+                    ? payload.map((member) => {
+                        const fallback =
+                          fallbackMembers.find(
+                            (item) =>
+                              item.email === member.correo ||
+                              (item.name && item.name === member.nombre)
+                          ) || {};
+                        const normalized = normalizeMember(member, fallback);
+                        const override = getRoleOverride(
+                          groupId,
+                          normalized.email || normalized.name
+                        );
+                        if (override) normalized.role = override;
+                        return normalized;
+                      })
+                    : fallbackMembers.map((member) => {
+                        const override = getRoleOverride(
+                          groupId,
+                          member.email || member.name
+                        );
+                        return override ? { ...member, role: override } : member;
+                      });
+
+                cacheMembers(groupId, members);
+                return toJsonResponse(members);
+              }
+
+              if (
+                /^\/groups\/[^/]+\/members\/[^/]+\/role$/.test(legacyPath) &&
+                method === "PUT"
+              ) {
+                const parts = legacyPath.split("/");
+                const groupId = parts[2];
+                const memberEmail = decodeURIComponent(parts[4]);
+                const body = await getBodyObject(init);
+                const nextRole = body.role || "Colaborador";
+                const members = getCachedMembers(groupId).map((member) =>
+                  member.email === memberEmail
+                    ? { ...member, role: nextRole }
+                    : member
+                );
+
+                cacheMembers(groupId, members);
+                setRoleOverride(groupId, memberEmail, nextRole);
+
+                return toJsonResponse(
+                  members.find((member) => member.email === memberEmail) || {
+                    email: memberEmail,
+                    role: nextRole,
+                  }
+                );
+              }
+
+              if (
+                /^\/groups\/[^/]+\/invite$/.test(legacyPath) &&
+                (method === "GET" || method === "POST")
+              ) {
+                const groupId = legacyPath.split("/")[2];
+                const response = await backendFetch(
+                  `/invitaciones/generar?grupoId=${encodeURIComponent(groupId)}`,
+                  { method: "POST" }
+                );
+
+                if (!response.ok) {
+                  return errorResponse(response, "No fue posible generar la invitacion.");
+                }
+
+                const payload = await response.json();
+                return toJsonResponse({
+                  code: payload.token,
+                  groupName: payload.grupoNombre,
+                  expiresAt: inviteExpiry(),
+                });
+              }
+
+              if (/^\/invites\/[^/]+$/.test(legacyPath) && method === "GET") {
+                const token = decodeURIComponent(legacyPath.split("/").pop());
+                const response = await backendFetch(
+                  `/invitaciones/${encodeURIComponent(token)}/validar`,
+                  { method: "GET" }
+                );
+
+                if (!response.ok) {
+                  return errorResponse(response, "Enlace de invitacion no valido");
+                }
+
+                const payload = await response.json();
+                if (!payload.valida || payload.usado) {
+                  return toJsonResponse(
+                    { message: "Enlace de invitacion no valido" },
+                    400
+                  );
+                }
+
+                if (payload.expirada) {
+                  return toJsonResponse({ message: "Enlace expirado" }, 410);
+                }
+
+                return toJsonResponse({
+                  groupName: payload.grupoNombre,
+                  groupId: null,
+                });
+              }
+
+              if (/^\/invites\/[^/]+\/join$/.test(legacyPath) && method === "POST") {
+                const token = decodeURIComponent(legacyPath.split("/")[2]);
+                const validation = await backendFetch(
+                  `/invitaciones/${encodeURIComponent(token)}/validar`,
+                  { method: "GET" }
+                );
+
+                if (!validation.ok) {
+                  return errorResponse(validation, "Enlace de invitacion no valido");
+                }
+
+                const inviteInfo = await validation.json();
+                if (!inviteInfo.valida || inviteInfo.usado) {
+                  return toJsonResponse(
+                    { message: "Enlace de invitacion no valido" },
+                    400
+                  );
+                }
+
+                if (inviteInfo.expirada) {
+                  return toJsonResponse({ message: "Enlace expirado" }, 410);
+                }
+
+                const response = await backendFetch(
+                  `/invitaciones/${encodeURIComponent(token)}/aceptar`,
+                  { method: "POST" }
+                );
+
+                let alreadyMember = false;
+                if (response.status === 409) {
+                  alreadyMember = true;
+                } else if (!response.ok) {
+                  return errorResponse(response, "No fue posible aceptar la invitacion.");
+                }
+
+                const groups = await refreshGroups();
+                const group =
+                  groups.find((item) => item.name === inviteInfo.grupoNombre) ||
+                  groups[groups.length - 1] || {
+                    id: null,
+                    name: inviteInfo.grupoNombre,
+                  };
+
+                return toJsonResponse({
+                  alreadyMember,
+                  group: { id: group.id, name: group.name },
+                });
+              }
+
+              if (/^\/groups\/[^/]+\/tasks$/.test(legacyPath) && method === "GET") {
+                const groupId = legacyPath.split("/")[2];
+                const response = await backendFetch(`/tareas/grupo/${groupId}`, {
+                  method: "GET",
+                });
+
+                if (!response.ok) {
+                  return errorResponse(response, "No fue posible cargar las tareas.");
+                }
+
+                const payload = await response.json().catch(() => []);
+                const tasks = Array.isArray(payload)
+                  ? payload.map((task) => normalizeTask(task, Number(groupId)))
+                  : [];
+
+                tasks.forEach(cacheTask);
+                return toJsonResponse(tasks);
+              }
+
+              if (/^\/groups\/[^/]+\/tasks$/.test(legacyPath) && method === "POST") {
+                const groupId = legacyPath.split("/")[2];
+                const body = await getBodyObject(init);
+                const response = await backendFetch("/tareas", {
+                  method: "POST",
+                  body: {
+                    nombre: body.name || "",
+                    descripcion: body.description || "",
+                    fechaVencimiento: body.deadline || today(),
+                    frecuencia:
+                      body.frequency && body.frequency !== "ninguna"
+                        ? body.frequency
+                        : null,
+                    estado: "SIN_EMPEZAR",
+                    grupo: { id: Number(groupId) },
+                  },
+                });
+
+                if (!response.ok) {
+                  return errorResponse(response, "No fue posible crear la tarea.");
+                }
+
+                const payload = await response.json();
+                const task = normalizeTask(payload, Number(groupId));
+                cacheTask(task);
+                return toJsonResponse(task, response.status);
+              }
+
+              if (/^\/tasks\/[^/]+\/assignee$/.test(legacyPath) && method === "PUT") {
+                const taskId = Number(legacyPath.split("/")[2]);
+                const body = await getBodyObject(init);
+                const task = getTaskCache()[String(taskId)];
+
+                if (!task?.groupId) {
+                  return toJsonResponse(
+                    { message: "No fue posible identificar el grupo de la tarea." },
+                    400
+                  );
+                }
+
+                const cachedMembers =
+                  getCachedMembers(task.groupId).length > 0
+                    ? getCachedMembers(task.groupId)
+                    : await enrichMembers(task.groupId);
+                const member = cachedMembers.find(
+                  (item) => item.email === body.assignedToEmail
+                );
+
+                if (!member?.id) {
+                  return toJsonResponse(
+                    { message: "No fue posible identificar al responsable seleccionado." },
+                    400
+                  );
+                }
+
+                const response = await backendFetch("/tareas/asignar", {
+                  method: "POST",
+                  body: {
+                    tareaId: taskId,
+                    responsableId: Number(member.id),
+                    grupoId: Number(task.groupId),
+                  },
+                });
+
+                if (!response.ok) {
+                  return errorResponse(response, "No fue posible asignar la tarea.");
+                }
+
+                const payload = await response.json();
+                const normalizedTask = normalizeTask(
+                  payload.tarea || payload,
+                  Number(task.groupId)
+                );
+                cacheTask(normalizedTask);
+                return toJsonResponse(normalizedTask, response.status);
+              }
+
+              if (/^\/tasks\/[^/]+$/.test(legacyPath) && method === "DELETE") {
+                const taskId = Number(legacyPath.split("/").pop());
+                const response = await backendFetch(`/tareas/${taskId}`, {
+                  method: "DELETE",
+                });
+
+                if (!response.ok) {
+                  return errorResponse(response, "No fue posible eliminar la tarea.");
+                }
+
+                removeTask(taskId);
+                return toJsonResponse({}, response.status);
+              }
+            } catch (error) {
+              return toJsonResponse(
+                {
+                  message:
+                    error instanceof Error
+                      ? error.message
+                      : "No fue posible adaptar la respuesta del backend.",
+                },
+                500
+              );
+            }
+
+            return originalFetch(input, init);
+          };
+        })();
+      </script>
       <script type="module" crossorigin src="/assets/index-DO9ZIy8i.js"></script>
       <link rel="stylesheet" crossorigin href="/assets/index-IQ5aTU5U.css">
     </head>

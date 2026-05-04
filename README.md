@@ -1,37 +1,58 @@
-# EP07 – Sistema de Organización de Tareas Domésticas
+# EP07 - Sistema de Organizacion de Tareas Domesticas
 
-## Descripción del proyecto
-Este proyecto consiste en el desarrollo de una aplicación que permite organizar y distribuir tareas domésticas dentro de un hogar compartido.
-El sistema busca mejorar la coordinación entre los miembros de una familia o grupo de convivencia mediante herramientas digitales que faciliten la asignación, seguimiento y cumplimiento de responsabilidades domésticas.
-
----
-
-## Contexto de negocio
-
-En hogares compartidos, la distribución de tareas domésticas suele generar conflictos debido a la falta de claridad sobre responsabilidades y cumplimiento.
-Las herramientas digitales pueden facilitar la asignación, seguimiento y cumplimiento de estas tareas entre los miembros del hogar.
-Por esta razón, se plantea el desarrollo de una plataforma que permita gestionar tareas domésticas de forma colaborativa.
-
----
-
-## Problema a resolver
-
-Desarrollar una aplicación que permita organizar y distribuir tareas dentro de un hogar de manera clara y eficiente.
-
----
+## Descripcion del proyecto
+Este proyecto consiste en el desarrollo de una aplicacion que permite organizar y distribuir tareas domesticas dentro de un hogar compartido.
 
 ## Funcionalidades principales
 
-El sistema contemplará las siguientes funcionalidades:
-
 * Registro de usuarios y grupos familiares
-* Creación y asignación de tareas domésticas
-* Definición de fechas límite y prioridades
+* Creacion y asignacion de tareas domesticas
+* Definicion de fechas limite y prioridades
 * Registro del estado de cada tarea
 * Historial de cumplimiento por usuario
-* Reportes sobre la distribución de responsabilidades en el hogar
+* Reportes sobre la distribucion de responsabilidades en el hogar
 
+## Base de datos local vs Docker
 
+El backend ahora usa perfiles distintos para evitar el problema de conectividad entre el JAR local y PostgreSQL en Docker:
 
+* `local`: usa `localhost:5432`
+* `docker`: usa `db:5432`
+* `render`: usa `DATABASE_URL` si se define
 
+### Caso 1: PostgreSQL en Docker y JAR local
 
+Levanta solo la base de datos:
+
+```bash
+docker compose up -d db
+```
+
+Luego ejecuta el backend localmente:
+
+```bash
+cd Soyla
+./mvnw spring-boot:run
+```
+
+En este caso Spring usa automaticamente el perfil `local`.
+
+### Caso 2: backend y PostgreSQL dentro de Docker
+
+```bash
+docker compose up --build
+```
+
+En este caso `docker-compose.yml` activa el perfil `docker`.
+
+## Variables locales sugeridas
+
+```env
+DATABASE_USER=postgres
+DATABASE_PASSWORD=postgres
+DATABASE_NAME=soyla
+DATABASE_HOST=localhost
+DATABASE_PORT=5432
+PORT=8080
+JWT_SECRET=change-me-local-jwt-secret-32-bytes-min
+```

@@ -4,6 +4,7 @@ import com.fabrica.soyla.model.InvitacionDTO;
 import com.fabrica.soyla.model.InvitacionGrupo;
 import com.fabrica.soyla.service.InvitacionService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -20,10 +21,18 @@ public class InvitacionController {
     @Autowired
     private InvitacionService invitacionService;
 
+    @Value("${app.frontend.public-url:http://localhost:5173}")
+    private String frontendPublicUrl;
+
     @PostMapping("/generar")
     public ResponseEntity<InvitacionDTO> generarInvitacion(@RequestParam Long grupoId) {
         InvitacionGrupo invitacion = invitacionService.generarInvitacion(grupoId);
-        InvitacionDTO dto = new InvitacionDTO(invitacion.getToken(), invitacion.getGrupo().getNombre());
+        String publicInviteUrl = frontendPublicUrl.replaceAll("/+$", "") + "/unirse/" + invitacion.getToken();
+        InvitacionDTO dto = new InvitacionDTO(
+            invitacion.getToken(),
+            invitacion.getGrupo().getNombre(),
+            publicInviteUrl
+        );
         return ResponseEntity.status(HttpStatus.CREATED).body(dto);
     }
 

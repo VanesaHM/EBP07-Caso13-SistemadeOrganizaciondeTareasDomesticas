@@ -1,13 +1,38 @@
+databases:
+  - name: soyla-db
+    plan: free
+    region: virginia
+
 services:
   - type: web
     name: soyla-api
     runtime: docker
+    plan: free
+    region: virginia
     rootDir: Soyla
     healthCheckPath: /health
     envVars:
       - key: PORT
         value: 10000
+      - key: SPRING_PROFILES_ACTIVE
+        value: render
       - key: JWT_SECRET
         generateValue: true
+      - key: APP_CORS_ALLOWED_ORIGINS
+        value: https://soyla.vercel.app,http://localhost:5173
+      - key: APP_FRONTEND_PUBLIC_URL
+        value: https://soyla.vercel.app
+      - key: APP_BACKEND_PUBLIC_URL
+        value: https://soyla-api.onrender.com
       - key: DATABASE_URL
-        sync: false
+        fromDatabase:
+          name: soyla-db
+          property: connectionString
+      - key: DATABASE_USERNAME
+        fromDatabase:
+          name: soyla-db
+          property: user
+      - key: DATABASE_PASSWORD
+        fromDatabase:
+          name: soyla-db
+          property: password
