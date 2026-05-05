@@ -34,7 +34,7 @@ public class AuthService {
         String token = jwtUtil.generarToken(usuario.getCorreo());
         inactivityTrackingService.registrarActividad(usuario.getCorreo());
 
-        return new LoginResponseDTO(token, usuario.getCorreo());
+        return new LoginResponseDTO(token, usuario.getCorreo(), usuario.getNombre(), usuario.getCorreo());
     }
 
     public void logout(String correo, String token) {

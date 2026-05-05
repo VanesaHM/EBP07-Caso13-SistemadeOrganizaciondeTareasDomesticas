@@ -9,10 +9,14 @@ public class LoginResponseDTO {
     private String token;
     private String mensaje;
     private String usuario;
+    private String fullName;
+    private String email;
 
-    public LoginResponseDTO(String token, String usuario) {
+    public LoginResponseDTO(String token, String usuario, String fullName, String email) {
         this.token = token;
         this.usuario = usuario;
-        this.mensaje = "Inicio de sesión exitoso";
+        this.fullName = fullName;
+        this.email = email;
+        this.mensaje = "Inicio de sesion exitoso";
     }
 }
