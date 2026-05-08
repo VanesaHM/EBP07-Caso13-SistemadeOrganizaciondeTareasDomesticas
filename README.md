@@ -1,37 +1,78 @@
-# EP07 – Sistema de Organización de Tareas Domésticas
+# EP07 - Sistema de Organizacion de Tareas Domesticas
 
-## Descripción del proyecto
-Este proyecto consiste en el desarrollo de una aplicación que permite organizar y distribuir tareas domésticas dentro de un hogar compartido.
-El sistema busca mejorar la coordinación entre los miembros de una familia o grupo de convivencia mediante herramientas digitales que faciliten la asignación, seguimiento y cumplimiento de responsabilidades domésticas.
+## Descripcion
+`Soyla` es una aplicacion para organizar tareas del hogar entre miembros de una familia o convivencia. El proyecto queda separado en:
 
----
+- `Soyla/`: backend Spring Boot con API REST. En local usa H2 por defecto y en Render Free puede persistir con Postgres.
+- `Soyla/Frontend`: frontend React + Vite preparado para consumir la API desde `VITE_API_URL`.
 
-## Contexto de negocio
+## Funcionalidades integradas
 
-En hogares compartidos, la distribución de tareas domésticas suele generar conflictos debido a la falta de claridad sobre responsabilidades y cumplimiento.
-Las herramientas digitales pueden facilitar la asignación, seguimiento y cumplimiento de estas tareas entre los miembros del hogar.
-Por esta razón, se plantea el desarrollo de una plataforma que permita gestionar tareas domésticas de forma colaborativa.
+- Registro e inicio de sesion
+- Perfil y actualizacion de correo y telefono
+- Creacion de grupos familiares
+- Invitaciones por enlace
+- Gestion de miembros y roles
+- Creacion, asignacion y eliminacion de tareas
 
----
+## Desarrollo local
 
-## Problema a resolver
+### Opcion 1: con Docker
 
-Desarrollar una aplicación que permita organizar y distribuir tareas dentro de un hogar de manera clara y eficiente.
+```bash
+docker compose up --build
+```
 
----
+- Frontend: `http://localhost:5173`
+- Backend: `http://localhost:8080`
 
-## Funcionalidades principales
+### Opcion 2: sin Docker
 
-El sistema contemplará las siguientes funcionalidades:
+Backend:
 
-* Registro de usuarios y grupos familiares
-* Creación y asignación de tareas domésticas
-* Definición de fechas límite y prioridades
-* Registro del estado de cada tarea
-* Historial de cumplimiento por usuario
-* Reportes sobre la distribución de responsabilidades en el hogar
+```bash
+cd Soyla
+./mvnw spring-boot:run
+```
 
+Frontend:
 
+```bash
+cd Soyla/Frontend
+npm install
+npm run dev
+```
 
+Usa `Soyla/Frontend/.env.example` como referencia para `VITE_API_URL`.
 
+## Despliegue
 
+### Frontend en Vercel
+
+Configura el proyecto apuntando a `Soyla/Frontend` y usa:
+
+- Build command: `npm run build`
+- Output directory: `dist`
+- Variable: `VITE_API_URL=https://soyla-api.onrender.com/api`
+
+El archivo `vercel.json` ya agrega el rewrite para que las rutas del SPA funcionen.
+Configura `VITE_API_URL` en `Production` y `Preview` dentro de Vercel para que ambos entornos usen el backend correcto.
+
+### Backend en Render con Docker
+
+Configura el servicio web apuntando a `Soyla/` para que Render use el `Dockerfile`.
+
+Variables recomendadas:
+
+- `APP_CORS_ALLOWED_ORIGINS=https://TU-FRONTEND.vercel.app,https://*.vercel.app`
+- `DATABASE_URL=<conexion de Render Postgres>`
+- `DATABASE_USERNAME=<usuario de Render Postgres>`
+- `DATABASE_PASSWORD=<password de Render Postgres>`
+
+Para el plan gratuito de Render, usa Postgres en lugar de H2. Los discos persistentes no estan disponibles en Free, asi que la persistencia debe venir de la base administrada.
+Si usas `rootDir: Soyla`, deja `dockerfilePath` y `dockerContext` relativos a esa carpeta.
+
+## Verificacion realizada
+
+- `./mvnw test`
+- `npm run build`
