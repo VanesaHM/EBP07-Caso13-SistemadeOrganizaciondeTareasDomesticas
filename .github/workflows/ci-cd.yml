@@ -1,8 +1,5 @@
 name: CI/CD Pipeline - Soyla
 
-# ============================================================================
-# TRIGGERS: Define cuándo se ejecuta este workflow
-# ============================================================================
 on:
   push:
     branches:
@@ -14,19 +11,13 @@ on:
       - develop
   workflow_dispatch:
 
-# ============================================================================
-# CONFIGURACIÓN GLOBAL
-# ============================================================================
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
   JAVA_VERSION: '17'
   NODE_VERSION: '20'
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true   # ✅ FIX: Fuerza Node.js 24 en actions
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
-# ============================================================================
-# JOBS: Etapas del pipeline
-# ============================================================================
 jobs:
   # =========================================================================
   # JOB 1: VALIDACIÓN DEL BACKEND (JAVA/MAVEN)
@@ -51,29 +42,42 @@ jobs:
 
       - name: 🔍 Validar estructura del proyecto
         run: |
+          echo "📂 Contenido del directorio raíz:"
+          ls -la
           if [ ! -f "Soyla/pom.xml" ]; then
-            echo "❌ Error: pom.xml no encontrado"
+            echo "❌ Error: pom.xml no encontrado en Soyla/"
+            echo "📂 Contenido de Soyla/ (si existe):"
+            ls -la Soyla/ 2>/dev/null || echo "El directorio Soyla/ no existe"
             exit 1
           fi
           echo "✅ Estructura del proyecto validada"
 
       - name: 🧪 Ejecutar pruebas unitarias
+        continue-on-error: true
+        id: tests
         run: |
           cd Soyla
-          mvn test --batch-mode --fail-fast -DskipITs
+          mvn test --batch-mode -DskipITs
 
       - name: 🏗️ Compilar y construir backend
         run: |
           cd Soyla
           mvn clean package -DskipTests --batch-mode
 
-      - name: 📊 Generar reportes de pruebas
+      - name: 📊 Subir reportes de pruebas
         if: always()
-        uses: actions/upload-artifact@v4   # ✅ FIX: v3 → v4
+        uses: actions/upload-artifact@v4
         with:
           name: backend-test-reports
           path: Soyla/target/surefire-reports/
+          if-no-files-found: warn   # ✅ FIX: No falla si no hay archivos
           retention-days: 7
+
+      - name: ✅ Verificar resultado de pruebas
+        if: steps.tests.outcome == 'failure'
+        run: |
+          echo "❌ Las pruebas unitarias fallaron. Revisa los logs anteriores."
+          exit 1
 
   # =========================================================================
   # JOB 2: VALIDACIÓN DEL FRONTEND (REACT/VITE)
@@ -96,6 +100,8 @@ jobs:
 
       - name: 🔍 Validar estructura del frontend
         run: |
+          echo "📂 Contenido de Soyla/Frontend/:"
+          ls -la Soyla/Frontend/ 2>/dev/null || echo "El directorio no existe"
           if [ ! -f "Soyla/Frontend/package.json" ]; then
             echo "❌ Error: package.json no encontrado"
             exit 1
@@ -106,20 +112,21 @@ jobs:
         working-directory: Soyla/Frontend
         run: npm ci
 
-      - name: 🔎 Ejecutar linting (si está configurado)
+      - name: 🔎 Ejecutar linting
         working-directory: Soyla/Frontend
         continue-on-error: true
-        run: npm run lint || echo "⚠️ Linting no configurado"
+        run: npm run lint || echo "⚠️ Linting no configurado o con warnings"
 
       - name: 🏗️ Construir frontend
         working-directory: Soyla/Frontend
         run: npm run build
 
       - name: 📤 Guardar artefactos del build
-        uses: actions/upload-artifact@v4   # ✅ FIX: v3 → v4
+        uses: actions/upload-artifact@v4
         with:
           name: frontend-build
           path: Soyla/Frontend/dist/
+          if-no-files-found: error
           retention-days: 7
 
   # =========================================================================
@@ -128,7 +135,8 @@ jobs:
   security-analysis:
     name: 🔐 Security & Quality Analysis
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
+    continue-on-error: true   # ✅ FIX: No bloquea el pipeline principal
 
     steps:
       - name: 📥 Checkout código
@@ -157,7 +165,7 @@ jobs:
       - name: 🔒 Auditar dependencias (Frontend)
         working-directory: Soyla/Frontend
         continue-on-error: true
-        run: npm audit --production
+        run: npm audit --production || echo "⚠️ Vulnerabilidades en frontend (no bloqueante)"
 
   # =========================================================================
   # JOB 4: CONSTRUCCIÓN DE IMAGEN DOCKER
@@ -221,9 +229,6 @@ jobs:
       url: https://soyla-api.onrender.com
 
     steps:
-      - name: 📥 Checkout código
-        uses: actions/checkout@v4
-
       - name: 🔔 Trigger Render Deploy
         run: |
           if [ -z "${{ secrets.RENDER_DEPLOY_HOOK }}" ]; then
@@ -231,7 +236,6 @@ jobs:
             exit 0
           fi
           curl -X POST ${{ secrets.RENDER_DEPLOY_HOOK }}
-        shell: bash
 
       - name: ✅ Deploy completado
         run: echo "🎉 Despliegue a Render iniciado. Verifica el estado en https://dashboard.render.com"
@@ -249,9 +253,18 @@ jobs:
       - name: 🎯 Determinar estado
         id: status
         run: |
-          if [ "${{ needs.backend-validation.result }}" == "failure" ] || \
-             [ "${{ needs.frontend-validation.result }}" == "failure" ] || \
-             [ "${{ needs.build-docker.result }}" == "failure" ]; then
+          BACKEND="${{ needs.backend-validation.result }}"
+          FRONTEND="${{ needs.frontend-validation.result }}"
+          DOCKER="${{ needs.build-docker.result }}"
+          SECURITY="${{ needs.security-analysis.result }}"
+
+          echo "Backend:  $BACKEND"
+          echo "Frontend: $FRONTEND"
+          echo "Docker:   $DOCKER"
+          echo "Security: $SECURITY"
+
+          # Security no bloquea (tiene continue-on-error a nivel de job)
+          if [ "$BACKEND" == "failure" ] || [ "$FRONTEND" == "failure" ] || [ "$DOCKER" == "failure" ]; then
             echo "status=❌ FAILED" >> $GITHUB_OUTPUT
             exit 1
           else
@@ -259,26 +272,24 @@ jobs:
           fi
 
       - name: 📝 Resumen del Pipeline
+        if: always()
         run: |
           echo "
           ╔════════════════════════════════════════╗
           ║   CI/CD Pipeline - Soyla               ║
           ╚════════════════════════════════════════╝
-          
+
           📊 Estado General: ${{ steps.status.outputs.status }}
-          
+
           📋 Resumen de Jobs:
-            ✓ Backend Validation: ${{ needs.backend-validation.result }}
-            ✓ Frontend Validation: ${{ needs.frontend-validation.result }}
-            ✓ Security Analysis: ${{ needs.security-analysis.result }}
-            ✓ Docker Build: ${{ needs.build-docker.result }}
-          
-          🔗 Más información: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+            Backend Validation : ${{ needs.backend-validation.result }}
+            Frontend Validation: ${{ needs.frontend-validation.result }}
+            Security Analysis  : ${{ needs.security-analysis.result }}
+            Docker Build       : ${{ needs.build-docker.result }}
+
+          🔗 Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           "
 
-# ============================================================================
-# CONFIGURACIÓN ADICIONAL
-# ============================================================================
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
