@@ -12,7 +12,7 @@ on:
     branches:
       - main
       - develop
-  workflow_dispatch: # Permite ejecución manual desde GitHub
+  workflow_dispatch:
 
 # ============================================================================
 # CONFIGURACIÓN GLOBAL
@@ -22,6 +22,7 @@ env:
   IMAGE_NAME: ${{ github.repository }}
   JAVA_VERSION: '17'
   NODE_VERSION: '20'
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true   # ✅ FIX: Fuerza Node.js 24 en actions
 
 # ============================================================================
 # JOBS: Etapas del pipeline
@@ -36,7 +37,6 @@ jobs:
     timeout-minutes: 15
 
     steps:
-      # --- Setup del entorno ---
       - name: 📥 Checkout código
         uses: actions/checkout@v4
         with:
@@ -49,7 +49,6 @@ jobs:
           distribution: 'temurin'
           cache: maven
 
-      # --- Validaciones ---
       - name: 🔍 Validar estructura del proyecto
         run: |
           if [ ! -f "Soyla/pom.xml" ]; then
@@ -70,7 +69,7 @@ jobs:
 
       - name: 📊 Generar reportes de pruebas
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4   # ✅ FIX: v3 → v4
         with:
           name: backend-test-reports
           path: Soyla/target/surefire-reports/
@@ -85,7 +84,6 @@ jobs:
     timeout-minutes: 15
 
     steps:
-      # --- Setup del entorno ---
       - name: 📥 Checkout código
         uses: actions/checkout@v4
 
@@ -96,7 +94,6 @@ jobs:
           cache: 'npm'
           cache-dependency-path: 'Soyla/Frontend/package-lock.json'
 
-      # --- Validaciones ---
       - name: 🔍 Validar estructura del frontend
         run: |
           if [ ! -f "Soyla/Frontend/package.json" ]; then
@@ -119,7 +116,7 @@ jobs:
         run: npm run build
 
       - name: 📤 Guardar artefactos del build
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4   # ✅ FIX: v3 → v4
         with:
           name: frontend-build
           path: Soyla/Frontend/dist/
@@ -212,7 +209,7 @@ jobs:
           cache-to: type=gha,mode=max
 
   # =========================================================================
-  # JOB 5: DESPLIEGUE A RENDER (Opcional - solo en main)
+  # JOB 5: DESPLIEGUE A RENDER (solo en main)
   # =========================================================================
   deploy-render:
     name: 🚀 Deploy to Render
