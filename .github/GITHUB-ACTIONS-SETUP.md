@@ -1,10 +1,10 @@
-# 🚀 Guía de Configuración: GitHub Actions CI/CD
+# Guía de Configuración: GitHub Actions CI/CD
 
-## 📋 Descripción General
+## Descripción General
 
 El archivo `.github/workflows/ci-cd.yml` automatiza el pipeline completo de validación y despliegue del proyecto Soyla:
 
-### 🔄 Flujo de Ejecución
+### Flujo de Ejecución
 1. **Backend Validation** - Compila y prueba el código Java/Maven
 2. **Frontend Validation** - Instala dependencias y construye con Vite
 3. **Security Analysis** - Audita vulnerabilidades en ambos lados
@@ -13,7 +13,7 @@ El archivo `.github/workflows/ci-cd.yml` automatiza el pipeline completo de vali
 
 ---
 
-## 🔐 Configuración de GitHub Secrets
+## Configuración de GitHub Secrets
 
 Para que el workflow funcione correctamente, configura estos secrets en GitHub:
 
@@ -48,7 +48,7 @@ Token o contraseña del registro Docker privado
 
 ---
 
-## ⚙️ Configuración Adicional Recomendada
+## Configuración Adicional Recomendada
 
 ### 1. **Ramas Principales**
 El workflow se ejecuta automáticamente en:
@@ -61,8 +61,8 @@ Si tus ramas tienen otros nombres, edita el archivo `.github/workflows/ci-cd.yml
 on:
   push:
     branches:
-      - main          # ← Cambia aquí si es necesario
-      - develop       # ← Agrega o modifica según tus ramas
+      - main          
+      - develop       
   pull_request:
     branches:
       - main
@@ -74,13 +74,13 @@ Puedes personalizar las versiones de Java y Node.js:
 
 ```yaml
 env:
-  JAVA_VERSION: '17'  # ← Cambiar si necesitas otra versión
-  NODE_VERSION: '20'  # ← Cambiar si necesitas otra versión
+  JAVA_VERSION: '17'  
+  NODE_VERSION: '20'  
 ```
 
 ---
 
-## 📊 Monitoreo del Workflow
+## Monitoreo del Workflow
 
 ### Ver ejecuciones en tiempo real:
 1. Ve al repositorio en GitHub
@@ -89,14 +89,14 @@ env:
 4. Observa el estado de cada job
 
 ### Diferencia entre estados:
-- ✅ **Success**: Todos los pasos completaron correctamente
-- ❌ **Failed**: Algún paso falló (revisa logs)
-- ⏳ **In Progress**: El workflow está ejecutándose
-- ⊘ **Cancelled**: El workflow fue cancelado manualmente
+-  **Success**: Todos los pasos completaron correctamente
+-  **Failed**: Algún paso falló (revisa logs)
+-  **In Progress**: El workflow está ejecutándose
+-  **Cancelled**: El workflow fue cancelado manualmente
 
 ---
 
-## 🔧 Troubleshooting
+## Troubleshooting
 
 ### Problema: Backend tests fallan
 ```bash
@@ -127,7 +127,7 @@ env:
 
 ---
 
-## 📝 Logs y Reportes
+## Logs y Reportes
 
 El workflow genera varios artefactos que puedes descargar:
 
@@ -143,30 +143,20 @@ Para descargar:
 
 ---
 
-## 🎯 Mejores Prácticas Implementadas
+## Mejores Prácticas Implementadas
 
-✅ **Separación clara de responsabilidades** - Cada job tiene una tarea específica  
-✅ **Caché de dependencias** - Optimiza el tiempo de ejecución  
-✅ **Seguridad** - Usa GitHub Secrets para credenciales  
-✅ **Fail-fast** - Se detiene en el primer error  
-✅ **Concurrencia controlada** - Cancela workflows duplicados  
-✅ **Condiciones inteligentes** - Deploy solo en rama main  
-✅ **Notificaciones de estado** - Resumen final del pipeline  
-✅ **Auditoría de dependencias** - Busca vulnerabilidades  
-
----
-
-## 🚀 Próximas Mejoras
-
-- [ ] Agregar tests de integración automatizados
-- [ ] Implementar notificaciones Slack/Discord en caso de falla
-- [ ] Agregar análisis de cobertura de código
-- [ ] Implementar deployment a múltiples ambientes (staging, production)
-- [ ] Agregar aprovisionamiento de base de datos de prueba
+**Separación clara de responsabilidades** - Cada job tiene una tarea específica  
+**Caché de dependencias** - Optimiza el tiempo de ejecución  
+**Seguridad** - Usa GitHub Secrets para credenciales  
+**Fail-fast** - Se detiene en el primer error  
+**Concurrencia controlada** - Cancela workflows duplicados  
+**Condiciones inteligentes** - Deploy solo en rama main  
+**Notificaciones de estado** - Resumen final del pipeline  
+**Auditoría de dependencias** - Busca vulnerabilidades  
 
 ---
 
-## 📚 Referencias
+## Referencias
 
 - [GitHub Actions Documentation](https://docs.github.com/en/actions)
 - [Docker Build & Push Action](https://github.com/docker/build-push-action)
