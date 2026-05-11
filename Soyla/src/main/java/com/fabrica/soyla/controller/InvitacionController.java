@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.stream.Collectors;
+import org.springframework.http.HttpStatus;
 
 @RestController
 @RequestMapping("/api/invitaciones")
@@ -123,7 +124,7 @@ public class InvitacionController {
                 .orElseThrow(() -> new RuntimeException("Grupo no encontrado"));
 
             if (!grupoFamiliarService.esCreador(grupo, usuario)) {
-                return ResponseEntity.forbidden().build();
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
             }
 
             List<InvitacionGrupo> invitaciones = invitacionService.obtenerInvitacionesDeGrupo(grupo);

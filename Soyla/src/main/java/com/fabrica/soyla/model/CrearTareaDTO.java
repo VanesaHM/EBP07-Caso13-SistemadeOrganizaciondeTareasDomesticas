@@ -17,6 +17,7 @@ public class CrearTareaDTO {
     @NotNull(message = "El ID del grupo familiar es obligatorio")
     private Long grupoFamiliarId;
 
+    private Long asignadoAId;
     private LocalDate fechaVencimiento;
     private String prioridad = "MEDIA";
 
@@ -39,6 +40,9 @@ public class CrearTareaDTO {
 
     public Long getGrupoFamiliarId() { return grupoFamiliarId; }
     public void setGrupoFamiliarId(Long grupoFamiliarId) { this.grupoFamiliarId = grupoFamiliarId; }
+
+    public Long getAsignadoAId() { return asignadoAId; }
+    public void setAsignadoAId(Long asignadoAId) { this.asignadoAId = asignadoAId; }
 
     public LocalDate getFechaVencimiento() { return fechaVencimiento; }
     public void setFechaVencimiento(LocalDate fechaVencimiento) { this.fechaVencimiento = fechaVencimiento; }

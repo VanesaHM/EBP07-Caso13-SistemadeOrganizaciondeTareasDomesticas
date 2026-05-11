@@ -23,4 +23,7 @@ public class CambiarPasswordDTO {
 
     public String getPasswordNueva() { return passwordNueva; }
     public void setPasswordNueva(String passwordNueva) { this.passwordNueva = passwordNueva; }
+
+    public String getNuevaPassword() { return passwordNueva; }
+    public void setNuevaPassword(String nuevaPassword) { this.passwordNueva = nuevaPassword; }
 }

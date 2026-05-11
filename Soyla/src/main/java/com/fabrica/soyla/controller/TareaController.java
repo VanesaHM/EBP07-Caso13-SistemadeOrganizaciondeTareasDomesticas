@@ -63,7 +63,7 @@ public class TareaController {
                 usuario,
                 asignadoA,
                 crearTareaDTO.getFechaVencimiento(),
-                crearTareaDTO.getPrioridad()
+                Tarea.PrioridadTarea.valueOf(crearTareaDTO.getPrioridad().toUpperCase())
             );
 
             TareaDTO dto = convertirATareaDTO(tarea);

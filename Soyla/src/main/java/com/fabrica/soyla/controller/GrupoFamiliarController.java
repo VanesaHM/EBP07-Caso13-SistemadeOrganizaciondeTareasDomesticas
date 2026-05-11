@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.stream.Collectors;
+import org.springframework.http.HttpStatus;
 
 @RestController
 @RequestMapping("/api/grupos")
@@ -89,7 +90,7 @@ public class GrupoFamiliarController {
                 .orElseThrow(() -> new RuntimeException("Grupo no encontrado"));
 
             if (!grupoFamiliarService.esMiembroActivo(grupo, usuario)) {
-                return ResponseEntity.forbidden().build();
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
             }
 
             GrupoFamiliarDTO dto = convertirAGrupoFamiliarDTO(grupo);
@@ -111,7 +112,7 @@ public class GrupoFamiliarController {
                 .orElseThrow(() -> new RuntimeException("Grupo no encontrado"));
 
             if (!grupoFamiliarService.esMiembroActivo(grupo, usuario)) {
-                return ResponseEntity.forbidden().build();
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
             }
 
             List<GrupoMiembro> miembros = grupoFamiliarService.obtenerMiembrosActivos(grupo);

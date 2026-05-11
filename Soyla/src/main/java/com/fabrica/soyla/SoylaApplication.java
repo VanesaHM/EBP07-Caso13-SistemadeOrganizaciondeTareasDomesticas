@@ -5,8 +5,17 @@ import java.net.URISyntaxException;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.FilterType;
 
 @SpringBootApplication
+@ComponentScan(
+	basePackages = "com.fabrica.soyla",
+	excludeFilters = @ComponentScan.Filter(
+		type = FilterType.REGEX,
+		pattern = "com\\.fabrica\\.soyla\\.controller\\..*"
+	)
+)
 public class SoylaApplication {
 
 	public static void main(String[] args) {

@@ -11,6 +11,14 @@ public class LoginResponseDTO {
         this.usuario = usuario;
     }
 
+    public LoginResponseDTO(String token, Long id, String nombre, String email) {
+        this.token = token;
+        this.usuario = new Usuario();
+        this.usuario.setId(id);
+        this.usuario.setNombre(nombre);
+        this.usuario.setEmail(email);
+    }
+
     public String getToken() { return token; }
     public void setToken(String token) { this.token = token; }
 

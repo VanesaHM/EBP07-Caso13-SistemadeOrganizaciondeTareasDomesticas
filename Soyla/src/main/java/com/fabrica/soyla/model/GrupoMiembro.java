@@ -35,6 +35,12 @@ public class GrupoMiembro {
         this.usuario = usuario;
     }
 
+    public GrupoMiembro(GrupoFamiliar grupoFamiliar, Usuario usuario, EstadoMiembro estado) {
+        this.grupoFamiliar = grupoFamiliar;
+        this.usuario = usuario;
+        this.estado = estado;
+    }
+
     // Getters y Setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
