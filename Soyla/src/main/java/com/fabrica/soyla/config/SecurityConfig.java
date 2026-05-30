@@ -5,6 +5,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
@@ -13,6 +15,11 @@ public class SecurityConfig {
 
     @Autowired
     private JwtFilter jwtFilter;
+
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder(12);
+    }
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -25,24 +32,33 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                 .requestMatchers("/", "/health", "/api/health", "/error", "/favicon.ico").permitAll()
+
                 .requestMatchers("/api/auth/login").permitAll()
                 .requestMatchers("/api/auth/register").permitAll()
                 .requestMatchers("/api/usuarios/registrar").permitAll()
+
                 .requestMatchers("/api/users/**").permitAll()
                 .requestMatchers("/api/groups/**").permitAll()
                 .requestMatchers("/api/tasks/**").permitAll()
                 .requestMatchers("/api/invites/**").permitAll()
+
                 .requestMatchers("/api/invitaciones/*/validar").permitAll()
+
                 .requestMatchers("/api/invitaciones/*/aceptar").authenticated()
                 .requestMatchers("/api/auth/logout").authenticated()
+
+                .requestMatchers(HttpMethod.DELETE, "/api/grupos/**").authenticated()
+
                 .requestMatchers("/api/grupos/**").authenticated()
                 .requestMatchers("/api/tareas/**").authenticated()
                 .requestMatchers("/api/invitaciones/**").authenticated()
                 .requestMatchers("/api/usuarios/perfil/**").authenticated()
+                .requestMatchers("/api/notificaciones/**").authenticated()
+
                 .anyRequest().authenticated()
             )
             .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+
         return http.build();
     }
 }
-
