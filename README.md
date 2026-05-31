@@ -1,6 +1,7 @@
 # EP07 - Sistema de Organizacion de Tareas Domesticas
 
 ## Descripcion
+<<<<<<< HEAD
 
 `Soyla` es una aplicacion para organizar tareas del hogar entre miembros de una familia o convivencia. El proyecto queda separado en:
 
@@ -51,6 +52,54 @@ Usa `Soyla/Frontend/.env.example` como referencia para `VITE_API_URL`.
 
 ## Despliegue
 
+=======
+`Soyla` es una aplicacion para organizar tareas del hogar entre miembros de una familia o convivencia. El proyecto queda separado en:
+
+- `Soyla/`: backend Spring Boot con API REST. En local usa H2 por defecto y en Render Free puede persistir con Postgres.
+- `Soyla/Frontend`: frontend React + Vite preparado para consumir la API desde `VITE_API_URL`.
+
+## Funcionalidades integradas
+
+- Registro e inicio de sesion
+- Perfil y actualizacion de correo y telefono
+- Creacion de grupos familiares
+- Invitaciones por enlace
+- Gestion de miembros y roles
+- Creacion, asignacion y eliminacion de tareas
+
+## Desarrollo local
+
+### Opcion 1: con Docker
+
+```bash
+docker compose up --build
+```
+
+- Frontend: `http://localhost:5173`
+- Backend: `http://localhost:8080`
+
+### Opcion 2: sin Docker
+
+Backend:
+
+```bash
+cd Soyla
+./mvnw spring-boot:run
+```
+
+Frontend:
+
+```bash
+cd Soyla/Frontend
+npm install
+npm run dev
+```
+
+Usa `Soyla/Frontend/.env.example` como referencia para `VITE_API_URL`.
+
+## Despliegue
+
+>>>>>>> Front
 ### Frontend en Vercel
 
 Configura el proyecto apuntando a `Soyla/Frontend` y usa:

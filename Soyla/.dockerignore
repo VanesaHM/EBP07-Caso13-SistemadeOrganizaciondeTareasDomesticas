@@ -1,11 +1,15 @@
+<<<<<<< HEAD
 .git
 .gitignore
 .gitattributes
 
+=======
+>>>>>>> Front
 target/
 data/
 Frontend/
 node_modules/
+<<<<<<< HEAD
 
 .idea/
 .vscode/
@@ -13,3 +17,8 @@ node_modules/
 *.log
 HELP.md
 README.md
+=======
+.git/
+.idea/
+.vscode/
+>>>>>>> Front

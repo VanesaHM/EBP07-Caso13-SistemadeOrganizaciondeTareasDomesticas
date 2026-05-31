@@ -16,6 +16,7 @@
 # JVM crash logs
 hs_err_pid*
 replay_pid*
+<<<<<<< HEAD
 
 # Environment variables
 .env
@@ -24,9 +25,16 @@ replay_pid*
 
 # Frontend build/cache
 .vercel
+=======
+.vercel
+
+>>>>>>> Front
 node_modules/
 .vite/
 dist/
 
+<<<<<<< HEAD
 # Local docs/cache
+=======
+>>>>>>> Front
 github/

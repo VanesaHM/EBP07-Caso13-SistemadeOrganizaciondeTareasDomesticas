@@ -33,8 +33,14 @@ build/
 ### VS Code ###
 .vscode/
 
+<<<<<<< HEAD
 ### Frontend ###
 node_modules/
 .vite/
 dist/
 .vercel/
+=======
+node_modules/
+.vite/
+dist/
+>>>>>>> Front
