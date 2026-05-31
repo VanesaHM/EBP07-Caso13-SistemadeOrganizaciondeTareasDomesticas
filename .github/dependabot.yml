@@ -1,8 +1,6 @@
 version: 2
 updates:
-  # =========================================================================
   # BACKEND - Maven Dependencies
-  # =========================================================================
   - package-ecosystem: "maven"
     directory: "/Soyla"
     schedule:
@@ -13,7 +11,7 @@ updates:
     
     open-pull-requests-limit: 3
     assignees:
-      - "vanesa"  # Cambiar al usuario responsable
+      - "vanesa"  
     reviewers:
       - "vanesa"
     labels:
@@ -33,15 +31,11 @@ updates:
       - dependency-type: "all"
     
     ignore:
-      # Ignorar actualizaciones principales de Spring Boot por ahora
-      # (déjalas para upgrades planificados)
       - dependency-name: "org.springframework.boot:spring-boot-starter-parent"
         update-types:
           - "version-update:semver-major"
 
-  # =========================================================================
   # FRONTEND - npm Dependencies
-  # =========================================================================
   - package-ecosystem: "npm"
     directory: "/Soyla/Frontend"
     schedule:
@@ -82,9 +76,7 @@ updates:
       - dependency-type: "patch"
         dependency-group: "patch-updates"
 
-  # =========================================================================
   # DOCKER - Base Images
-  # =========================================================================
   - package-ecosystem: "docker"
     directory: "/Soyla"
     schedule:
@@ -105,9 +97,7 @@ updates:
       prefix: "chore(docker):"
       include: "scope"
 
-  # =========================================================================
   # GitHub Actions
-  # =========================================================================
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:

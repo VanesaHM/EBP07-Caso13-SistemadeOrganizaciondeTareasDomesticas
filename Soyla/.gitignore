@@ -33,6 +33,8 @@ build/
 ### VS Code ###
 .vscode/
 
+### Frontend ###
 node_modules/
 .vite/
 dist/
+.vercel/

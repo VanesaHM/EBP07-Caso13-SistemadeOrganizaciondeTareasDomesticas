@@ -1,2 +1,10 @@
+node_modules/
+.vite/
 dist/
-.vercel
+.vercel/
+.DS_Store
+.env
+.env.local
+npm-debug.log*
+yarn-error.log*
+.vscode/

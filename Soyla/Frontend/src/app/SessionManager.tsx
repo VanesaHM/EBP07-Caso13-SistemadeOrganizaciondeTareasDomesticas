@@ -12,8 +12,6 @@ export function SessionManager({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     // Verificar sesión activa al montar
     if (!getActiveSession()) {
-      clearSession();
-      navigate("/");
       return;
     }
 

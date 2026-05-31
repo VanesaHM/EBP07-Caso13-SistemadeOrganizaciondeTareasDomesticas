@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import { Button } from "../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
-import { LogOut, Users, CheckCircle2, ArrowRight, Plus, Loader2 } from "lucide-react";
+import { LogOut, Users, CheckCircle2, ArrowRight, Plus, Loader2, Shield, UserCog, User } from "lucide-react";
 import { AppLogo } from "../components/AppLogo";
 import { type FamilyGroup, listGroups } from "../lib/api";
 import { clearSession, getActiveSession, markLogoutSuccess, touchSession } from "../lib/session";
