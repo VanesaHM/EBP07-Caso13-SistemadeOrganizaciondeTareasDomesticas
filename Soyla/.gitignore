@@ -32,12 +32,9 @@ build/
 
 ### VS Code ###
 .vscode/
-<<<<<<< HEAD
-node_modules/
-.vercel/
-=======
 
+### Frontend ###
 node_modules/
 .vite/
 dist/
->>>>>>> Front
+.vercel/

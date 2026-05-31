@@ -1,10 +1,7 @@
 # EP07 - Sistema de Organizacion de Tareas Domesticas
 
-<<<<<<< HEAD
-## Descripcion del proyecto
-Este proyecto consiste en el desarrollo de una aplicacion que permite organizar y distribuir tareas domesticas dentro de un hogar compartido.
-=======
 ## Descripcion
+
 `Soyla` es una aplicacion para organizar tareas del hogar entre miembros de una familia o convivencia. El proyecto queda separado en:
 
 - `Soyla/`: backend Spring Boot con API REST. En local usa H2 por defecto y en Render Free puede persistir con Postgres.
@@ -13,11 +10,14 @@ Este proyecto consiste en el desarrollo de una aplicacion que permite organizar 
 ## Funcionalidades integradas
 
 - Registro e inicio de sesion
+- Confirmacion de registro por enlace
 - Perfil y actualizacion de correo y telefono
-- Creacion de grupos familiares
+- Creacion, visualizacion, abandono y eliminacion de grupos familiares
 - Invitaciones por enlace
 - Gestion de miembros y roles
-- Creacion, asignacion y eliminacion de tareas
+- Creacion, asignacion, eliminacion y cambio de estado de tareas
+- Notificaciones de tareas asignadas, completadas, proximas a vencer y vencidas
+- Clasificacion semanal por puntos
 
 ## Desarrollo local
 
@@ -29,63 +29,9 @@ docker compose up --build
 
 - Frontend: `http://localhost:5173`
 - Backend: `http://localhost:8080`
->>>>>>> Front
 
 ### Opcion 2: sin Docker
 
-<<<<<<< HEAD
-* Registro de usuarios y grupos familiares
-* Creacion y asignacion de tareas domesticas
-* Definicion de fechas limite y prioridades
-* Registro del estado de cada tarea
-* Historial de cumplimiento por usuario
-* Reportes sobre la distribucion de responsabilidades en el hogar
-
-## Base de datos local vs Docker
-
-El backend ahora usa perfiles distintos para evitar el problema de conectividad entre el JAR local y PostgreSQL en Docker:
-
-* `local`: usa `localhost:5432`
-* `docker`: usa `db:5432`
-* `render`: usa `DATABASE_URL` si se define
-
-### Caso 1: PostgreSQL en Docker y JAR local
-
-Levanta solo la base de datos:
-
-```bash
-docker compose up -d db
-```
-
-Luego ejecuta el backend localmente:
-
-```bash
-cd Soyla
-./mvnw spring-boot:run
-```
-
-En este caso Spring usa automaticamente el perfil `local`.
-
-### Caso 2: backend y PostgreSQL dentro de Docker
-
-```bash
-docker compose up --build
-```
-
-En este caso `docker-compose.yml` activa el perfil `docker`.
-
-## Variables locales sugeridas
-
-```env
-DATABASE_USER=postgres
-DATABASE_PASSWORD=postgres
-DATABASE_NAME=soyla
-DATABASE_HOST=localhost
-DATABASE_PORT=5432
-PORT=8080
-JWT_SECRET=change-me-local-jwt-secret-32-bytes-min
-```
-=======
 Backend:
 
 ```bash
@@ -137,4 +83,3 @@ El `render.yaml` incluido ya crea el servicio `soyla-api`, una base Postgres gra
 
 - `./mvnw test`
 - `npm run build`
->>>>>>> Front
