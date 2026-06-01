@@ -51,18 +51,26 @@ export function GroupView() {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [working, setWorking] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [loadingGroup, setLoadingGroup] = useState(true);
 
   const reload = async (email: string, id: string) => {
-    const [loadedGroup, members] = await Promise.all([getGroup(id), listGroupMembers(id)]);
-    const currentMember = members.find((member) => member.email === email);
-    if (!currentMember) {
-      navigate("/home");
-      return;
+    try {
+      const [loadedGroup, members] = await Promise.all([getGroup(id), listGroupMembers(id)]);
+      const currentMember = members.find((member) => member.email === email);
+      if (!currentMember) {
+        navigate("/home");
+        return;
+      }
+      setGroup(loadedGroup);
+      setMemberCount(members.length);
+      setAdminCount(members.filter((member) => member.role === "Administrador").length);
+      setUserRole(currentMember.role);
+      setErrorMessage("");
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : "No fue posible cargar el grupo.");
+    } finally {
+      setLoadingGroup(false);
     }
-    setGroup(loadedGroup);
-    setMemberCount(members.length);
-    setAdminCount(members.filter((member) => member.role === "Administrador").length);
-    setUserRole(currentMember.role);
   };
 
   useEffect(() => {
@@ -73,6 +81,7 @@ export function GroupView() {
     }
     setUserName(session.user.fullName);
     setUserEmail(session.user.email);
+    setLoadingGroup(true);
     void reload(session.user.email, groupId);
     void getActiveInvite(groupId)
       .then((invite) => {
@@ -148,7 +157,35 @@ export function GroupView() {
   const hoursLeft = inviteExpiresAt ? Math.max(0, Math.ceil((inviteExpiresAt - Date.now()) / 3600000)) : 0;
   const isOnlyAdmin = userRole === "Administrador" && adminCount <= 1;
 
-  if (!group) return null;
+  if (loadingGroup) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-50 flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <div className="w-12 h-12 mx-auto rounded-full bg-gradient-to-br from-purple-200 to-blue-200 animate-pulse" />
+          <p className="text-gray-500 text-sm">Cargando grupo...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!group) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-50 flex items-center justify-center px-6">
+        <Card className="max-w-md w-full border-orange-100 shadow-sm">
+          <CardContent className="pt-10 pb-10 text-center space-y-5">
+            <AlertTriangle className="h-10 w-10 text-orange-500 mx-auto" />
+            <div className="space-y-2">
+              <h1 className="text-xl text-gray-900">No fue posible cargar el grupo</h1>
+              <p className="text-sm text-gray-500">{errorMessage}</p>
+            </div>
+            <Button onClick={() => navigate("/home")} className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700">
+              Volver al inicio
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-50">

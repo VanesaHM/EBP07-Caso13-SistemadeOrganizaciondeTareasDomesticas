@@ -47,6 +47,7 @@ export function NotificationBell({ currentUserEmail }: NotificationBellProps) {
   const [open, setOpen] = useState(false);
   const [notifications, setNotifications] = useState<UserNotification[]>([]);
   const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
   const buttonRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const [panelPosition, setPanelPosition] = useState({ top: 0, right: 0 });
@@ -54,13 +55,18 @@ export function NotificationBell({ currentUserEmail }: NotificationBellProps) {
 
   const refresh = async () => {
     if (!currentUserEmail) return;
-    const loaded = await listNotifications(currentUserEmail);
-    setNotifications(loaded);
+    try {
+      const loaded = await listNotifications(currentUserEmail);
+      setNotifications(loaded);
+      setErrorMessage("");
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : "No fue posible cargar notificaciones.");
+    }
   };
 
   useEffect(() => {
     void refresh();
-    const interval = window.setInterval(() => void refresh(), 2500);
+    const interval = window.setInterval(() => void refresh(), 15000);
     return () => window.clearInterval(interval);
   }, [currentUserEmail]);
 
@@ -86,8 +92,11 @@ export function NotificationBell({ currentUserEmail }: NotificationBellProps) {
     updatePosition();
     setOpen((value) => !value);
     setLoading(true);
-    await refresh();
-    setLoading(false);
+    try {
+      await refresh();
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleClickNotification = async (notification: UserNotification) => {
@@ -165,6 +174,11 @@ export function NotificationBell({ currentUserEmail }: NotificationBellProps) {
                 <div className="flex flex-col items-center justify-center py-12 gap-4">
                   <div className="w-8 h-8 border-2 border-purple-200 border-t-purple-600 rounded-full animate-spin" />
                   <p className="text-sm text-gray-500">Cargando notificaciones...</p>
+                </div>
+              ) : errorMessage ? (
+                <div className="flex flex-col items-center justify-center py-12 gap-3 px-4 text-center">
+                  <AlertCircle className="h-7 w-7 text-orange-400" />
+                  <p className="text-sm text-gray-500">{errorMessage}</p>
                 </div>
               ) : notifications.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-12 gap-4 px-4 text-center">

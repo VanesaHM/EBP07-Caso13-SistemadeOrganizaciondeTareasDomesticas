@@ -24,6 +24,7 @@ export function Profile() {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [unauthorized, setUnauthorized] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
     const session = getActiveSession();
@@ -41,9 +42,21 @@ export function Profile() {
     }
 
     const loadProfile = async () => {
-      const profile = await getUserProfile(session.user.email);
-      setUser(profile);
-      setLoading(false);
+      try {
+        const profile = await getUserProfile(session.user.email);
+        setUser(profile);
+      } catch (error) {
+        setUser({
+          id: session.user.email,
+          fullName: session.user.fullName,
+          email: session.user.email,
+          phone: null,
+          createdAt: new Date().toISOString(),
+        });
+        setErrorMessage(error instanceof Error ? error.message : "No fue posible cargar el perfil.");
+      } finally {
+        setLoading(false);
+      }
     };
 
     void loadProfile();
@@ -145,6 +158,12 @@ export function Profile() {
         </div>
 
         <div className="max-w-md mx-auto">
+          {errorMessage && (
+            <div className="mb-4 rounded-lg border border-orange-200 bg-orange-50 px-4 py-3 text-sm text-orange-800">
+              {errorMessage}
+            </div>
+          )}
+
           <Card className="shadow-sm border-purple-100">
             <CardContent className="pt-10 pb-10">
               <div className="flex flex-col items-center text-center space-y-6">

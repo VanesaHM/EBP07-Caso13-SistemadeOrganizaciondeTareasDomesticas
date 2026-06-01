@@ -12,6 +12,7 @@ const RAW_API_BASE_URL =
     : DEFAULT_PRODUCTION_API_BASE_URL);
 
 export const API_BASE_URL = RAW_API_BASE_URL.replace(/\/+$/, "");
+const REQUEST_TIMEOUT_MS = 30000;
 
 type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 
@@ -170,17 +171,30 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
   }
 
   let response: Response;
+  const controller = new AbortController();
+  const timeoutId = window.setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+
   try {
     response = await fetch(`${API_BASE_URL}${path}`, {
       method: options.method || "GET",
       headers: Object.keys(defaultHeaders).length ? defaultHeaders : undefined,
       body: options.body === undefined ? undefined : JSON.stringify(options.body),
+      signal: controller.signal,
     });
-  } catch {
+  } catch (error) {
+    if (error instanceof DOMException && error.name === "AbortError") {
+      throw new ApiError(
+        "El servidor esta tardando demasiado en responder. Intenta nuevamente en unos segundos.",
+        0
+      );
+    }
+
     throw new ApiError(
       `No se pudo conectar con el servidor en ${API_BASE_URL}. Verifica que el backend este ejecutandose.`,
       0
     );
+  } finally {
+    window.clearTimeout(timeoutId);
   }
 
   if (!response.ok) {

@@ -156,6 +156,7 @@ export function TasksList({ groupId, refreshTrigger, createTaskButton, currentUs
   const [showReconnectNotice, setShowReconnectNotice] = useState(false);
   const [showColaboradorRestricted, setShowColaboradorRestricted] = useState(false);
   const [showNoReassignCompleted, setShowNoReassignCompleted] = useState(false);
+  const [loadErrorMessage, setLoadErrorMessage] = useState("");
 
   const isColaborador = currentUserRole === "Colaborador";
 
@@ -166,20 +167,33 @@ export function TasksList({ groupId, refreshTrigger, createTaskButton, currentUs
   useEffect(() => {
     const loadData = async () => {
       setLoading(true);
-      const [loadedTasks, loadedMembers] = await Promise.all([
-        listTasks(groupId),
-        listGroupMembers(groupId),
-      ]);
-      setTasks(loadedTasks);
-      setGroupMembers(loadedMembers);
-      setLoading(false);
+      try {
+        const [loadedTasks, loadedMembers] = await Promise.all([
+          listTasks(groupId),
+          listGroupMembers(groupId),
+        ]);
+        setTasks(loadedTasks);
+        setGroupMembers(loadedMembers);
+        setLoadErrorMessage("");
+      } catch (error) {
+        setLoadErrorMessage(error instanceof Error ? error.message : "No fue posible cargar las tareas.");
+      } finally {
+        setLoading(false);
+      }
     };
 
     void loadData();
 
     const interval = window.setInterval(() => {
-      void listTasks(groupId).then(setTasks);
-    }, 3000);
+      void listTasks(groupId)
+        .then((loadedTasks) => {
+          setTasks(loadedTasks);
+          setLoadErrorMessage("");
+        })
+        .catch(() => {
+          setShowReconnectNotice(true);
+        });
+    }, 15000);
 
     return () => window.clearInterval(interval);
   }, [groupId, refreshTrigger]);
@@ -292,6 +306,28 @@ export function TasksList({ groupId, refreshTrigger, createTaskButton, currentUs
               <p className="text-sm text-gray-500">Cargando tareas...</p>
             </div>
           </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (loadErrorMessage) {
+    return (
+      <Card className="shadow-sm border-orange-100">
+        <CardHeader>
+          <CardTitle className="text-xl flex items-center gap-2">
+            <Wifi className="h-5 w-5 text-orange-500" />
+            Tareas del grupo
+          </CardTitle>
+          <CardDescription>No fue posible sincronizar las tareas.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="rounded-lg border border-orange-200 bg-orange-50 px-4 py-3 text-sm text-orange-800">
+            {loadErrorMessage}
+          </div>
+          <Button onClick={() => window.location.reload()} variant="outline" className="border-purple-200 hover:bg-purple-50">
+            Reintentar
+          </Button>
         </CardContent>
       </Card>
     );
@@ -525,7 +561,7 @@ export function TasksList({ groupId, refreshTrigger, createTaskButton, currentUs
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
-            {tasks.map((task) => (
+            {(isTasksExpanded ? tasks : tasks.slice(0, INITIAL_TASKS_VISIBLE)).map((task) => (
               <div
                 key={task.id}
                 className="group p-4 bg-white border border-purple-100 rounded-lg hover:border-purple-300 hover:shadow-sm focus-within:border-purple-300 focus-within:shadow-sm transition-all"

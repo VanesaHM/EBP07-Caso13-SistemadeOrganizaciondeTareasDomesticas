@@ -4,7 +4,7 @@ import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../components/ui/card";
-import { LogOut, Home, ArrowLeft, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
+import { LogOut, Home, X, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
 import { AppLogo } from "../components/AppLogo";
 import { SecurityIndicator } from "../components/SecurityIndicator";
 import { ApiError, getUserProfile, updateUserProfile } from "../lib/api";
@@ -40,6 +40,7 @@ export function EditProfile() {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [pageLoading, setPageLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
 
   useEffect(() => {
     const session = getActiveSession();
@@ -52,10 +53,17 @@ export function EditProfile() {
     setCurrentEmail(session.user.email);
 
     const loadProfile = async () => {
-      const profile = await getUserProfile(session.user.email);
-      setEmail(profile.email);
-      setPhone(profile.phone ?? "");
-      setPageLoading(false);
+      try {
+        const profile = await getUserProfile(session.user.email);
+        setEmail(profile.email);
+        setPhone(profile.phone ?? "");
+      } catch (error) {
+        setEmail(session.user.email);
+        setPhone("");
+        setLoadError(error instanceof Error ? error.message : "No fue posible cargar tus datos actuales.");
+      } finally {
+        setPageLoading(false);
+      }
     };
 
     void loadProfile();
@@ -193,11 +201,26 @@ export function EditProfile() {
         <div className="max-w-md mx-auto">
           <Card className="shadow-sm border-purple-100">
             <CardHeader className="pb-2 pt-8 px-8">
-              <CardTitle className="text-lg text-gray-800">Informacion de contacto</CardTitle>
-              <CardDescription className="text-sm text-gray-500">
-                Modifica los datos que deseas actualizar y presiona{" "}
-                <span className="text-purple-600">Guardar Cambios</span>.
-              </CardDescription>
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <CardTitle className="text-lg text-gray-800">Informacion de contacto</CardTitle>
+                  <CardDescription className="text-sm text-gray-500 mt-1">
+                    Modifica los datos que deseas actualizar y presiona{" "}
+                    <span className="text-purple-600">Guardar Cambios</span>.
+                  </CardDescription>
+                </div>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => navigate("/perfil")}
+                  disabled={loading}
+                  aria-label="Cerrar edicion"
+                  className="shrink-0 rounded-full hover:bg-purple-50"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
             </CardHeader>
 
             <CardContent className="px-8 pb-8 pt-4">
@@ -209,6 +232,13 @@ export function EditProfile() {
                       <p className="text-sm text-green-700">
                         Tus datos han sido actualizados correctamente.
                       </p>
+                    </div>
+                  )}
+
+                  {loadError && (
+                    <div className="flex items-start gap-3 bg-orange-50 border border-orange-200 rounded-xl px-4 py-3">
+                      <AlertCircle className="h-4 w-4 text-orange-500 mt-0.5 shrink-0" />
+                      <p className="text-sm text-orange-800">{loadError}</p>
                     </div>
                   )}
 
@@ -294,7 +324,6 @@ export function EditProfile() {
                     disabled={loading}
                     className="w-full h-11 border-purple-200 hover:bg-purple-50 flex items-center justify-center gap-2"
                   >
-                    <ArrowLeft className="h-4 w-4" />
                     Volver al perfil
                   </Button>
                 </div>
