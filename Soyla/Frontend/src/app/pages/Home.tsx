@@ -214,7 +214,7 @@ export function Home() {
           </Card>
 
           {/* Estado: tarjeta con lista de grupos (o mensaje vacío) */}
-          <Card className="max-w-2xl mx-auto shadow-xl border-purple-100/50 backdrop-blur-sm bg-white/80 overflow-hidden">
+          <Card className="w-full shadow-sm border-purple-100 backdrop-blur-sm bg-white/80 overflow-hidden">
             <div className="absolute inset-0 bg-gradient-to-br from-purple-50/50 via-transparent to-blue-50/50" />
             <CardContent className="relative pt-12 pb-12 px-6 sm:px-10">
               <div className="text-center space-y-8">
@@ -228,7 +228,7 @@ export function Home() {
                   <div className="absolute -inset-3 rounded-3xl border border-purple-100" />
                 </div>
 
-                <Card className="shadow-sm border-purple-100">
+                <Card className="w-full shadow-sm border-purple-100">
                   <CardHeader>
                     <CardTitle className="text-xl">Mis grupos</CardTitle>
                   </CardHeader>
