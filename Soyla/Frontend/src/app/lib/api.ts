@@ -187,9 +187,17 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
     let message = "Ocurri\u00f3 un error al procesar la solicitud.";
 
     try {
-      const payload = (await response.json()) as ErrorPayload;
-      if (payload.message) {
-        message = payload.message;
+      const contentType = response.headers.get("content-type") || "";
+      if (contentType.includes("application/json")) {
+        const payload = (await response.json()) as ErrorPayload;
+        if (payload.message) {
+          message = payload.message;
+        }
+      } else {
+        const text = await response.text();
+        if (text.trim()) {
+          message = text.trim();
+        }
       }
     } catch {
       // Ignore malformed error bodies and surface the fallback message.
