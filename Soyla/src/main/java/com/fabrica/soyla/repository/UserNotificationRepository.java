@@ -14,5 +14,7 @@ public interface UserNotificationRepository extends JpaRepository<UserNotificati
 
     Optional<UserNotification> findByRecipient_EmailIgnoreCaseAndDedupeKey(String email, String dedupeKey);
 
+    void deleteByTask_Id(UUID taskId);
+
     void deleteByGroup_Id(UUID groupId);
 }

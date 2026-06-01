@@ -358,7 +358,10 @@ public class SoylaService {
 
     public void deleteTask(UUID taskId) {
         HouseholdTask task = findTask(taskId);
+        UUID groupId = task.getGroup().getId();
+        notificationRepository.deleteByTask_Id(taskId);
         taskRepository.delete(task);
+        refreshLatestRankingState(groupId);
     }
 
     public TaskResponse updateTaskStatus(UUID taskId, UpdateTaskStatusRequest request) {

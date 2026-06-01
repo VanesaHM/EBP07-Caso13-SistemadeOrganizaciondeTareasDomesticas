@@ -146,6 +146,7 @@ export function TasksList({ groupId, refreshTrigger, createTaskButton, currentUs
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteSuccessMessage, setShowDeleteSuccessMessage] = useState(false);
   const [deletedTaskName, setDeletedTaskName] = useState("");
+  const [deleteErrorMessage, setDeleteErrorMessage] = useState("");
 
   const [updatingTaskId, setUpdatingTaskId] = useState<string | null>(null);
   const [showStatusSuccessMessage, setShowStatusSuccessMessage] = useState(false);
@@ -226,6 +227,8 @@ export function TasksList({ groupId, refreshTrigger, createTaskButton, currentUs
   const handleDeleteTask = async () => {
     if (!taskToDelete) return;
     setIsDeleting(true);
+    setDeleteErrorMessage("");
+    let deleted = false;
 
     try {
       await deleteTask(taskToDelete.id);
@@ -235,11 +238,15 @@ export function TasksList({ groupId, refreshTrigger, createTaskButton, currentUs
       window.setTimeout(() => setShowDeleteSuccessMessage(false), 4000);
       setTaskToDelete(null);
       onTasksChanged?.();
+      deleted = true;
     } catch (error) {
       console.error("Error al eliminar tarea:", error);
+      setDeleteErrorMessage(error instanceof Error ? error.message : "No se pudo eliminar la tarea.");
     } finally {
       setIsDeleting(false);
-      setDeleteDialogOpen(false);
+      if (deleted) {
+        setDeleteDialogOpen(false);
+      }
     }
   };
 
@@ -473,6 +480,11 @@ export function TasksList({ groupId, refreshTrigger, createTaskButton, currentUs
                   <p className="text-sm text-gray-600 mt-1 line-clamp-2">{taskToDelete.description}</p>
                 )}
               </div>
+              {deleteErrorMessage && (
+                <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+                  {deleteErrorMessage}
+                </div>
+              )}
               <div className="flex justify-end gap-3 pt-2">
                 <Button type="button" variant="outline" onClick={() => setDeleteDialogOpen(false)} disabled={isDeleting}>
                   Cancelar
@@ -602,6 +614,7 @@ export function TasksList({ groupId, refreshTrigger, createTaskButton, currentUs
                     <Button
                       onClick={() => {
                         setTaskToDelete(task);
+                        setDeleteErrorMessage("");
                         setDeleteDialogOpen(true);
                       }}
                       variant="outline"
