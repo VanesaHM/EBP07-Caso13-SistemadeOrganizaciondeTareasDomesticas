@@ -492,14 +492,19 @@ export function TasksList({ groupId, refreshTrigger, createTaskButton, currentUs
       </Dialog>
 
       <Card className="shadow-sm border-purple-100">
-        <CardHeader>
-          <CardTitle className="text-xl flex items-center gap-2">
-            <ClipboardList className="h-5 w-5 text-purple-500" />
-            Tareas del grupo
-          </CardTitle>
-          <CardDescription>
-            {tasks.length === 1 ? "1 tarea registrada" : `${tasks.length} tareas registradas`}
-          </CardDescription>
+        <CardHeader className="gap-4">
+          <div className="flex items-start justify-between gap-4 flex-wrap">
+            <div>
+              <CardTitle className="text-xl flex items-center gap-2">
+                <ClipboardList className="h-5 w-5 text-purple-500" />
+                Tareas del grupo
+              </CardTitle>
+              <CardDescription>
+                {tasks.length === 1 ? "1 tarea registrada" : `${tasks.length} tareas registradas`}
+              </CardDescription>
+            </div>
+            {createTaskButton && <div className="shrink-0">{createTaskButton}</div>}
+          </div>
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
