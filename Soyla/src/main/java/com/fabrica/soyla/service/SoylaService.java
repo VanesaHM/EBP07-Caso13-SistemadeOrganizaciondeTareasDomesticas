@@ -74,6 +74,7 @@ public class SoylaService {
     private final UserNotificationRepository notificationRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+    private final EmailService emailService;
 
     public SoylaService(
         AppUserRepository userRepository,
@@ -84,7 +85,8 @@ public class SoylaService {
         WeeklyRankingRepository rankingRepository,
         UserNotificationRepository notificationRepository,
         PasswordEncoder passwordEncoder,
-        JwtService jwtService
+        JwtService jwtService,
+        EmailService emailService
     ) {
         this.userRepository = userRepository;
         this.groupRepository = groupRepository;
@@ -95,6 +97,7 @@ public class SoylaService {
         this.notificationRepository = notificationRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
+        this.emailService = emailService;
     }
 
     public AuthResponse register(RegisterRequest request) {
@@ -111,7 +114,9 @@ public class SoylaService {
         refreshConfirmationToken(user);
         userRepository.save(user);
 
-        return toPendingAuthResponse(user);
+        AuthResponse response = toPendingAuthResponse(user);
+        emailService.sendEmailConfirmation(user.getEmail(), user.getFullName(), response.confirmationUrl());
+        return response;
     }
 
     @Transactional(readOnly = true)
@@ -153,7 +158,9 @@ public class SoylaService {
             return toAuthResponse(user);
         }
         refreshConfirmationToken(user);
-        return toPendingAuthResponse(user);
+        AuthResponse response = toPendingAuthResponse(user);
+        emailService.sendEmailConfirmation(user.getEmail(), user.getFullName(), response.confirmationUrl());
+        return response;
     }
 
     @Transactional(readOnly = true)
