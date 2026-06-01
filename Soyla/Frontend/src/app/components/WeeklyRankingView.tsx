@@ -26,25 +26,34 @@ export function WeeklyRankingView({ groupId, currentUserEmail, refreshTrigger }:
   const [ranking, setRanking] = useState<WeeklyRanking | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const loadRanking = async () => {
-    setLoading(true);
-    try {
-      setRanking(await getWeeklyRanking(groupId));
-    } catch (error) {
-      if (error instanceof ApiError && error.status === 404) {
-        setRanking(null);
-      } else {
-        throw error;
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
-    void loadRanking();
-    const interval = window.setInterval(() => void loadRanking(), 2000);
-    return () => window.clearInterval(interval);
+    let cancelled = false;
+    const load = async () => {
+      setLoading(true);
+      try {
+        const loaded = await getWeeklyRanking(groupId);
+        if (!cancelled) {
+          setRanking(loaded);
+        }
+      } catch (error) {
+        if (!cancelled) {
+          if (error instanceof ApiError && error.status === 404) {
+            setRanking(null);
+          } else {
+            throw error;
+          }
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    };
+
+    void load();
+    return () => {
+      cancelled = true;
+    };
   }, [groupId, refreshTrigger]);
 
   if (loading) {

@@ -11,10 +11,11 @@ interface WeeklyRankingFormProps {
   groupId: string;
   currentUserRole: "Administrador" | "Coadministrador" | "Colaborador";
   currentUserEmail: string;
+  refreshTrigger?: number;
   onRankingCreated?: () => void;
 }
 
-export function WeeklyRankingForm({ groupId, currentUserRole, currentUserEmail, onRankingCreated }: WeeklyRankingFormProps) {
+export function WeeklyRankingForm({ groupId, currentUserRole, currentUserEmail, refreshTrigger, onRankingCreated }: WeeklyRankingFormProps) {
   const [pointsPerTask, setPointsPerTask] = useState("");
   const [weeklyGoal, setWeeklyGoal] = useState("");
   const [activeRanking, setActiveRanking] = useState<WeeklyRanking | null>(null);
@@ -34,7 +35,7 @@ export function WeeklyRankingForm({ groupId, currentUserRole, currentUserEmail, 
 
   useEffect(() => {
     void loadActiveRanking();
-  }, [groupId]);
+  }, [groupId, refreshTrigger]);
 
   if (currentUserRole !== "Administrador") return null;
 

@@ -240,6 +240,7 @@ export function GroupView() {
               refreshTrigger={tasksRefreshTrigger}
               currentUserRole={userRole}
               currentUserEmail={userEmail}
+              onTasksChanged={() => setTasksRefreshTrigger((prev) => prev + 1)}
               createTaskButton={<CreateTaskForm groupId={groupId || ""} onTaskCreated={() => setTasksRefreshTrigger((prev) => prev + 1)} />}
             />
           </div>
@@ -250,6 +251,7 @@ export function GroupView() {
               groupId={groupId || ""}
               currentUserRole={userRole}
               currentUserEmail={userEmail}
+              refreshTrigger={tasksRefreshTrigger}
               onRankingCreated={() => setTasksRefreshTrigger((prev) => prev + 1)}
             />
           </div>

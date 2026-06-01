@@ -58,6 +58,7 @@ interface TasksListProps {
   createTaskButton?: React.ReactNode;
   currentUserRole?: "Administrador" | "Coadministrador" | "Colaborador";
   currentUserEmail?: string;
+  onTasksChanged?: () => void;
 }
 
 function getStatusBadgeStyle(status: string) {
@@ -130,7 +131,7 @@ function formatFrequency(frequency?: string) {
   }[frequency] || frequency;
 }
 
-export function TasksList({ groupId, refreshTrigger, createTaskButton, currentUserRole, currentUserEmail }: TasksListProps) {
+export function TasksList({ groupId, refreshTrigger, createTaskButton, currentUserRole, currentUserEmail, onTasksChanged }: TasksListProps) {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [groupMembers, setGroupMembers] = useState<GroupMember[]>([]);
   const [loading, setLoading] = useState(true);
@@ -216,6 +217,7 @@ export function TasksList({ groupId, refreshTrigger, createTaskButton, currentUs
       window.setTimeout(() => setShowSuccessMessage(false), 4000);
       setSelectedTask(null);
       setSelectedMember("");
+      onTasksChanged?.();
     } finally {
       setIsAssigning(false);
     }
@@ -232,6 +234,7 @@ export function TasksList({ groupId, refreshTrigger, createTaskButton, currentUs
       setShowDeleteSuccessMessage(true);
       window.setTimeout(() => setShowDeleteSuccessMessage(false), 4000);
       setTaskToDelete(null);
+      onTasksChanged?.();
     } catch (error) {
       console.error("Error al eliminar tarea:", error);
     } finally {
@@ -258,6 +261,7 @@ export function TasksList({ groupId, refreshTrigger, createTaskButton, currentUs
       setStatusSuccessTaskName(updatedTask.name);
       setShowStatusSuccessMessage(true);
       window.setTimeout(() => setShowStatusSuccessMessage(false), 4000);
+      onTasksChanged?.();
     } finally {
       setUpdatingTaskId(null);
     }

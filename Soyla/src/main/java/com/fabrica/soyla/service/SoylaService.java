@@ -2,8 +2,6 @@ package com.fabrica.soyla.service;
 
 import java.time.Instant;
 import java.time.LocalDate;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
@@ -444,16 +442,14 @@ public class SoylaService {
             throw new ApiException(HttpStatus.CONFLICT, "Ya existe una clasificaci\u00f3n semanal activa en el grupo familiar.");
         }
 
-        ZonedDateTime now = ZonedDateTime.now(ZoneId.systemDefault());
-        ZonedDateTime startOfWeek = now.minusDays(now.getDayOfWeek().getValue() - 1L).toLocalDate().atStartOfDay(now.getZone());
-        ZonedDateTime endOfWeek = startOfWeek.plusDays(7).minusNanos(1);
+        Instant now = Instant.now();
 
         WeeklyRanking ranking = new WeeklyRanking();
         ranking.setGroup(group);
         ranking.setPointsPerTask(request.pointsPerTask());
         ranking.setWeeklyGoal(request.weeklyGoal());
-        ranking.setStartAt(startOfWeek.toInstant());
-        ranking.setEndAt(endOfWeek.toInstant());
+        ranking.setStartAt(now);
+        ranking.setEndAt(now.plusMillis(7L * 24L * 60L * 60L * 1000L));
         rankingRepository.save(ranking);
 
         return toRankingResponse(ranking);
