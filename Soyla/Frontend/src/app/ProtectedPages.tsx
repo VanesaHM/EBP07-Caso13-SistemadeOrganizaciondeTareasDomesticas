@@ -17,4 +17,4 @@ export const GroupCreatedPage = () => <ProtectedRoute><GroupCreated /></Protecte
 export const GroupViewPage = () => <ProtectedRoute><GroupView /></ProtectedRoute>;
 export const ProfilePage = () => <ProtectedRoute><Profile /></ProtectedRoute>;
 export const EditProfilePage = () => <ProtectedRoute><EditProfile /></ProtectedRoute>;
-export const InviteAccessPage = () => <ProtectedRoute><InviteAccess /></ProtectedRoute>;
+export const InviteAccessPage = () => <InviteAccess />;
