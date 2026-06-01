@@ -18,7 +18,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "./ui/dialog";
-import { ClipboardList, CheckCircle2, Loader2 } from "lucide-react";
+import { ClipboardList, CheckCircle2, Loader2, X } from "lucide-react";
 import { ApiError, createTask } from "../lib/api";
 
 interface CreateTaskFormProps {
