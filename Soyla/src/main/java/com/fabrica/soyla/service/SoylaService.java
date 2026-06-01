@@ -400,7 +400,7 @@ public class SoylaService {
             task.setCompletedAt(null);
         }
 
-        finalizeActiveRankingIfNeeded(task.getGroup().getId());
+        refreshLatestRankingState(task.getGroup().getId());
         return toTaskResponse(task);
     }
 
@@ -556,14 +556,9 @@ public class SoylaService {
         }
     }
 
-    private void finalizeActiveRankingIfNeeded(UUID groupId) {
-        rankingRepository.findFirstByGroup_IdAndActiveTrueOrderByCreatedAtDesc(groupId).ifPresent(ranking -> {
-            WeeklyRankingResponse response = toRankingResponse(ranking);
-            boolean goalReached = response.members().stream().anyMatch(member -> member.points() >= ranking.getWeeklyGoal());
-            if (Instant.now().isAfter(ranking.getEndAt()) || goalReached) {
-                ranking.setActive(false);
-            }
-        });
+    private void refreshLatestRankingState(UUID groupId) {
+        rankingRepository.findFirstByGroup_IdOrderByCreatedAtDesc(groupId)
+            .ifPresent(this::toRankingResponse);
     }
 
     private AppUser findUserByEmail(String email) {
@@ -798,11 +793,27 @@ public class SoylaService {
             nextPosition++;
         }
 
-        boolean shouldBeInactive = Instant.now().isAfter(ranking.getEndAt()) || positioned.stream().anyMatch(member -> member.points() >= ranking.getWeeklyGoal());
-        if (ranking.isActive() && shouldBeInactive) {
-            ranking.setActive(false);
+        boolean expired = Instant.now().isAfter(ranking.getEndAt());
+        boolean goalReached = positioned.stream().anyMatch(member -> member.points() >= ranking.getWeeklyGoal());
+        boolean shouldBeActive = !expired && !goalReached;
+        if (ranking.isActive() != shouldBeActive) {
+            ranking.setActive(shouldBeActive);
         }
-        String winnerEmail = positioned.stream().filter(member -> member.points() > 0).findFirst().map(RankingMemberResponse::email).orElse(null);
+
+        String winnerEmail = null;
+        if (goalReached) {
+            winnerEmail = positioned.stream()
+                .filter(member -> member.points() >= ranking.getWeeklyGoal())
+                .findFirst()
+                .map(RankingMemberResponse::email)
+                .orElse(null);
+        } else if (expired) {
+            winnerEmail = positioned.stream()
+                .filter(member -> member.points() > 0)
+                .findFirst()
+                .map(RankingMemberResponse::email)
+                .orElse(null);
+        }
 
         return new WeeklyRankingResponse(
             ranking.getId(),
