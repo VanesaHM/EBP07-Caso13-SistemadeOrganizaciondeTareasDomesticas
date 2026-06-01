@@ -6,6 +6,7 @@ import { Label } from "../components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../components/ui/card";
 import { LogOut, Home, ArrowLeft, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
 import { AppLogo } from "../components/AppLogo";
+import { SecurityIndicator } from "../components/SecurityIndicator";
 import { ApiError, getUserProfile, updateUserProfile } from "../lib/api";
 import { clearSession, getActiveSession, markLogoutSuccess, updateSessionUser } from "../lib/session";
 

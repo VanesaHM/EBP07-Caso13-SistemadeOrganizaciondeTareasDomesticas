@@ -4,6 +4,7 @@ import { Button } from "../components/ui/button";
 import { Card, CardContent } from "../components/ui/card";
 import { LogOut, Home, ShieldAlert, User, Pencil, Phone, Mail } from "lucide-react";
 import { AppLogo } from "../components/AppLogo";
+import { SecurityIndicator } from "../components/SecurityIndicator";
 import { getUserProfile, type UserProfile } from "../lib/api";
 import { clearSession, getActiveSession, markLogoutSuccess } from "../lib/session";
 
