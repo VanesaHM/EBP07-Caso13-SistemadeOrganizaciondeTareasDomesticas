@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.MailException;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -39,6 +40,7 @@ public class EmailService {
         return frontendBaseUrl + normalizedPath;
     }
 
+    @Async
     public void sendEmailConfirmation(String toAddress, String fullName, String confirmationPath) {
         String confirmationUrl = buildEmailConfirmationUrl(confirmationPath);
 
@@ -47,7 +49,8 @@ public class EmailService {
             return;
         }
         if (mailSender == null) {
-            throw new IllegalStateException("Email delivery is enabled but JavaMailSender is not configured.");
+            LOGGER.warn("Email delivery is enabled but JavaMailSender is not configured. Confirmation link for {}: {}", toAddress, confirmationUrl);
+            return;
         }
 
         SimpleMailMessage message = new SimpleMailMessage();
@@ -70,7 +73,7 @@ public class EmailService {
         try {
             mailSender.send(message);
         } catch (MailException exception) {
-            throw new IllegalStateException("No fue posible enviar el correo de confirmacion.", exception);
+            LOGGER.warn("No fue posible enviar el correo de confirmacion a {}. Confirmation link: {}", toAddress, confirmationUrl, exception);
         }
     }
 }
