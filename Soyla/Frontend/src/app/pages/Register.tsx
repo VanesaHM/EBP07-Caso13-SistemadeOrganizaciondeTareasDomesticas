@@ -38,6 +38,9 @@ const isCommonPassword = (password: string): boolean => {
   );
 };
 
+const shouldShowDevelopmentConfirmationLink = () =>
+  window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+
 export function Register() {
   const navigate = useNavigate();
   const [fullName, setFullName] = useState("");
@@ -113,7 +116,10 @@ export function Register() {
             <p className="text-sm text-gray-600">
               Tu cuenta quedo pendiente de activacion. Revisa tu correo para confirmarla.
             </p>
-            {confirmationUrl && (
+            <p className="text-xs text-gray-500">
+              Si no ves el mensaje, revisa la bandeja de spam o solicita el reenvio desde la pantalla de confirmacion.
+            </p>
+            {confirmationUrl && shouldShowDevelopmentConfirmationLink() && (
               <div className="w-full bg-purple-50 border border-purple-100 rounded-lg p-3 text-left">
                 <p className="text-xs text-gray-500 mb-1">Enlace de confirmacion para desarrollo:</p>
                 <a href={confirmationUrl} className="text-xs text-purple-700 break-all hover:underline">
