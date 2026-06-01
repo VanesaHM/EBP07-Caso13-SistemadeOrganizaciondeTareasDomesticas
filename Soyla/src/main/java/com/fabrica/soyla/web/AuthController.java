@@ -1,5 +1,8 @@
 package com.fabrica.soyla.web;
 
+import java.util.Map;
+
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -14,6 +17,7 @@ import com.fabrica.soyla.web.ApiModels.AuthResponse;
 import com.fabrica.soyla.web.ApiModels.ConfirmEmailResponse;
 import com.fabrica.soyla.web.ApiModels.RegisterRequest;
 import com.fabrica.soyla.web.ApiModels.ResendConfirmationRequest;
+import com.fabrica.soyla.service.TokenBlacklistService;
 
 @RestController
 @Validated
@@ -21,9 +25,11 @@ import com.fabrica.soyla.web.ApiModels.ResendConfirmationRequest;
 public class AuthController {
 
     private final SoylaService soylaService;
+    private final TokenBlacklistService tokenBlacklistService;
 
-    public AuthController(SoylaService soylaService) {
+    public AuthController(SoylaService soylaService, TokenBlacklistService tokenBlacklistService) {
         this.soylaService = soylaService;
+        this.tokenBlacklistService = tokenBlacklistService;
     }
 
     @PostMapping("/register")
@@ -34,6 +40,14 @@ public class AuthController {
     @PostMapping("/login")
     public AuthResponse login(@RequestBody @jakarta.validation.Valid AuthRequest request) {
         return soylaService.login(request);
+    }
+
+    @PostMapping("/logout")
+    public Map<String, String> logout(@RequestHeader("Authorization") String authorizationHeader) {
+        if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
+            tokenBlacklistService.blacklist(authorizationHeader.substring(7));
+        }
+        return Map.of("message", "Sesion cerrada correctamente.");
     }
 
     @GetMapping("/confirm")

@@ -64,6 +64,7 @@ public class SoylaService {
     private static final List<String> ALLOWED_ROLES = List.of("Administrador", "Coadministrador", "Colaborador");
     private static final List<String> ALLOWED_FREQUENCIES = List.of("ninguna", "diaria", "semanal", "mensual");
     private static final List<String> ALLOWED_STATUSES = List.of("pending", "in_progress", "completed");
+    private static final String SPECIAL_PASSWORD_CHARACTERS = "!@#$%^&*()_+-=[]{};':\"\\|,.<>/?`~";
 
     private final AppUserRepository userRepository;
     private final HouseholdGroupRepository groupRepository;
@@ -105,6 +106,7 @@ public class SoylaService {
         if (userRepository.existsByEmailIgnoreCase(normalizedEmail)) {
             throw new ApiException(HttpStatus.CONFLICT, "Este correo electr\u00f3nico ya est\u00e1 registrado.");
         }
+        validatePassword(request.password());
 
         AppUser user = new AppUser();
         user.setFullName(request.fullName().trim());
@@ -601,6 +603,27 @@ public class SoylaService {
         }
         if (trimmed.matches("^[0-9]+$")) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "El nombre de la tarea no puede contener solo n\u00fameros.");
+        }
+    }
+
+    private void validatePassword(String password) {
+        if (!StringUtils.hasText(password)) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "La contrase\u00f1a es obligatoria.");
+        }
+        if (password.length() < 8) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "La contrase\u00f1a debe tener al menos 8 caracteres.");
+        }
+        if (password.chars().noneMatch(Character::isUpperCase)) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "La contrase\u00f1a debe incluir al menos una letra may\u00fascula.");
+        }
+        if (password.chars().noneMatch(Character::isLowerCase)) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "La contrase\u00f1a debe incluir al menos una letra min\u00fascula.");
+        }
+        if (password.chars().noneMatch(Character::isDigit)) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "La contrase\u00f1a debe incluir al menos un n\u00famero.");
+        }
+        if (password.chars().noneMatch(character -> SPECIAL_PASSWORD_CHARACTERS.indexOf(character) >= 0)) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "La contrase\u00f1a debe incluir al menos un caracter especial.");
         }
     }
 
