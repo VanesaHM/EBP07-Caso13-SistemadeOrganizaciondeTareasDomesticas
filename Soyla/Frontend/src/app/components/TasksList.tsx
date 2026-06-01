@@ -245,7 +245,8 @@ export function TasksList({ groupId, refreshTrigger, createTaskButton, currentUs
 
   const handleStatusChange = async (task: Task, status: Task["status"]) => {
     if (!currentUserEmail) return;
-    if (task.assignedToEmail !== currentUserEmail) {
+    const canManageTaskStatus = currentUserRole === "Administrador" || currentUserRole === "Coadministrador";
+    if (task.assignedToEmail && task.assignedToEmail !== currentUserEmail && !canManageTaskStatus) {
       setShowRestrictedMessage(true);
       window.setTimeout(() => setShowRestrictedMessage(false), 4000);
       return;

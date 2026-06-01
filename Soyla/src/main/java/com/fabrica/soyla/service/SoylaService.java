@@ -365,9 +365,19 @@ public class SoylaService {
         HouseholdTask task = findTask(taskId);
         String status = normalizeStatus(request.status());
         AppUser requester = findUserByEmail(request.requestedByEmail());
+        GroupMembership requesterMembership = membershipRepository
+            .findByGroup_IdAndUser_EmailIgnoreCase(task.getGroup().getId(), requester.getEmail())
+            .orElseThrow(() -> new ApiException(HttpStatus.FORBIDDEN, "Solo un miembro del grupo puede actualizar tareas."));
 
-        if (task.getAssignedTo() == null || !task.getAssignedTo().getId().equals(requester.getId())) {
+        boolean isAssignee = task.getAssignedTo() != null && task.getAssignedTo().getId().equals(requester.getId());
+        boolean canManageTasks = "Administrador".equals(requesterMembership.getRole()) || "Coadministrador".equals(requesterMembership.getRole());
+
+        if (task.getAssignedTo() != null && !isAssignee && !canManageTasks) {
             throw new ApiException(HttpStatus.FORBIDDEN, "Solo el responsable puede actualizar el estado de la tarea.");
+        }
+
+        if (task.getAssignedTo() == null) {
+            task.setAssignedTo(requester);
         }
 
         task.setStatus(status);
