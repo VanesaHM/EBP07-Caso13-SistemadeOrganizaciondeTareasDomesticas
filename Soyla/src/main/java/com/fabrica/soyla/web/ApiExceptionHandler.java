@@ -40,8 +40,12 @@ public class ApiExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     ResponseEntity<Map<String, String>> handleUnexpectedException(Exception exception) {
+        String detail = exception.getMessage() == null || exception.getMessage().isBlank()
+            ? exception.getClass().getSimpleName()
+            : exception.getClass().getSimpleName() + ": " + exception.getMessage();
+
         return ResponseEntity
             .status(HttpStatus.INTERNAL_SERVER_ERROR)
-            .body(Map.of("message", "Ocurrio un error interno en el servidor."));
+            .body(Map.of("message", "Ocurrio un error interno en el servidor. Detalle: " + detail));
     }
 }
