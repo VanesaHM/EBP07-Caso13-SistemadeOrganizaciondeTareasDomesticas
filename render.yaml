@@ -1,5 +1,5 @@
 databases:
-  - name: soyla-db
+  - name: soyla_dbb
     plan: free
     region: virginia
 
@@ -23,15 +23,33 @@ services:
         value: "3600"
       - key: APP_DATA_ENCRYPTION_KEY
         generateValue: true
+      - key: APP_FRONTEND_BASE_URL
+        value: https://soyla.vercel.app
+      - key: APP_MAIL_ENABLED
+        value: "true"
+      - key: APP_MAIL_FROM
+        value: no-reply@soyla.local
+      - key: MAIL_HOST
+        value: sandbox.smtp.mailtrap.io
+      - key: MAIL_PORT
+        value: "587"
+      - key: MAIL_USERNAME
+        value: cc0b14c6a4b507
+      - key: MAIL_PASSWORD
+        sync: false
+      - key: MAIL_SMTP_AUTH
+        value: "true"
+      - key: MAIL_SMTP_STARTTLS_ENABLE
+        value: "true"
       - key: DATABASE_URL
         fromDatabase:
-          name: soyla-db
+          name: soyla_dbb
           property: connectionString
       - key: DATABASE_USERNAME
         fromDatabase:
-          name: soyla-db
+          name: soyla_dbb
           property: user
       - key: DATABASE_PASSWORD
         fromDatabase:
-          name: soyla-db
+          name: soyla_dbb
           property: password

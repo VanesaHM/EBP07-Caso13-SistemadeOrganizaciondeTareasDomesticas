@@ -1,0 +1,569 @@
+{
+  "info": {
+    "name": "Soyla API - Render",
+    "description": "Colección para probar los 25 endpoints del backend Soyla en Render.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "version": "1.0.0"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "https://soyla-api.onrender.com"
+    },
+    {
+      "key": "authToken",
+      "value": ""
+    },
+    {
+      "key": "userEmail",
+      "value": "maria.perez@example.com"
+    },
+    {
+      "key": "groupId",
+      "value": ""
+    },
+    {
+      "key": "taskId",
+      "value": ""
+    },
+    {
+      "key": "inviteCode",
+      "value": ""
+    },
+    {
+      "key": "notificationId",
+      "value": ""
+    },
+    {
+      "key": "confirmToken",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "01 - Health",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/health",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "health"]
+        }
+      }
+    },
+    {
+      "name": "02 - Register",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"fullName\": \"María Pérez\",\n  \"email\": \"{{userEmail}}\",\n  \"password\": \"Passw0rd!\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/auth/register",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "auth", "register"]
+        }
+      }
+    },
+    {
+      "name": "03 - Confirm email",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/auth/confirm?token={{confirmToken}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "auth", "confirm"],
+          "query": [
+            {
+              "key": "token",
+              "value": "{{confirmToken}}"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "04 - Resend confirmation",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"{{userEmail}}\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/auth/resend-confirmation",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "auth", "resend-confirmation"]
+        }
+      }
+    },
+    {
+      "name": "05 - Login",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"{{userEmail}}\",\n  \"password\": \"Passw0rd!\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/auth/login",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "auth", "login"]
+        }
+      }
+    },
+    {
+      "name": "06 - Get user profile",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{authToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/users/{{userEmail}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "users", "{{userEmail}}"]
+        }
+      }
+    },
+    {
+      "name": "07 - Update user profile",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{authToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"{{userEmail}}\",\n  \"phone\": \"+34123456789\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/users/{{userEmail}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "users", "{{userEmail}}"]
+        }
+      }
+    },
+    {
+      "name": "08 - Create group",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{authToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Familia Hogar\",\n  \"createdByEmail\": \"{{userEmail}}\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/groups",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "groups"]
+        }
+      }
+    },
+    {
+      "name": "09 - List groups by member",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{authToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/groups?memberEmail={{userEmail}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "groups"],
+          "query": [
+            {
+              "key": "memberEmail",
+              "value": "{{userEmail}}"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "10 - Get group details",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{authToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/groups/{{groupId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "groups", "{{groupId}}"]
+        }
+      }
+    },
+    {
+      "name": "11 - List group members",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{authToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/groups/{{groupId}}/members",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "groups", "{{groupId}}", "members"]
+        }
+      }
+    },
+    {
+      "name": "12 - Get active invite",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{authToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/groups/{{groupId}}/invite",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "groups", "{{groupId}}", "invite"]
+        }
+      }
+    },
+    {
+      "name": "13 - Create or reuse invite",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{authToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/groups/{{groupId}}/invite",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "groups", "{{groupId}}", "invite"]
+        }
+      }
+    },
+    {
+      "name": "14 - Get invite by code",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/invites/{{inviteCode}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "invites", "{{inviteCode}}"]
+        }
+      }
+    },
+    {
+      "name": "15 - Join invite",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{authToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"userEmail\": \"juan.garcia@example.com\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/invites/{{inviteCode}}/join",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "invites", "{{inviteCode}}", "join"]
+        }
+      }
+    },
+    {
+      "name": "16 - List group tasks",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{authToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/groups/{{groupId}}/tasks",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "groups", "{{groupId}}", "tasks"]
+        }
+      }
+    },
+    {
+      "name": "17 - Create group task",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{authToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Lavar los platos\",\n  \"description\": \"Después de la cena\",\n  \"deadline\": \"2026-06-03\",\n  \"frequency\": \"UNA_VEZ\",\n  \"priority\": \"MEDIA\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/groups/{{groupId}}/tasks",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "groups", "{{groupId}}", "tasks"]
+        }
+      }
+    },
+    {
+      "name": "18 - Assign task",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{authToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"assignedToEmail\": \"juan.garcia@example.com\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/tasks/{{taskId}}/assignee",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "tasks", "{{taskId}}", "assignee"]
+        }
+      }
+    },
+    {
+      "name": "19 - Update task status",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{authToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"status\": \"COMPLETADA\",\n  \"requestedByEmail\": \"{{userEmail}}\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/tasks/{{taskId}}/status",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "tasks", "{{taskId}}", "status"]
+        }
+      }
+    },
+    {
+      "name": "20 - Delete task",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{authToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/tasks/{{taskId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "tasks", "{{taskId}}"]
+        }
+      }
+    },
+    {
+      "name": "21 - Create weekly ranking",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{authToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"pointsPerTask\": 10,\n  \"weeklyGoal\": 20,\n  \"requestedByEmail\": \"{{userEmail}}\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/groups/{{groupId}}/ranking",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "groups", "{{groupId}}", "ranking"]
+        }
+      }
+    },
+    {
+      "name": "22 - Get weekly ranking",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{authToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/groups/{{groupId}}/ranking",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "groups", "{{groupId}}", "ranking"]
+        }
+      }
+    },
+    {
+      "name": "23 - List notifications",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{authToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/notifications?email={{userEmail}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "notifications"],
+          "query": [
+            {
+              "key": "email",
+              "value": "{{userEmail}}"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "24 - Mark notification read",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{authToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/notifications/{{notificationId}}/read?email={{userEmail}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "notifications", "{{notificationId}}", "read"],
+          "query": [
+            {
+              "key": "email",
+              "value": "{{userEmail}}"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "25 - Mark all notifications read",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{authToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/notifications/read-all?email={{userEmail}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "notifications", "read-all"],
+          "query": [
+            {
+              "key": "email",
+              "value": "{{userEmail}}"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "26 - Logout",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{authToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/auth/logout",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "auth", "logout"]
+        }
+      }
+    }
+  ]
+}
